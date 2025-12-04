@@ -45,6 +45,9 @@ public class UserEntity {
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
 
+    // 리프레시 토큰
+    @Column(name = "refresh_token", length = 255)
+    private String refreshToken;
 
 
     public void changeNickname(String nickname) {
@@ -61,5 +64,9 @@ public class UserEntity {
 
     public void changeSubscribe(boolean subscribe) {
         this.isSubscribe = subscribe;
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }
