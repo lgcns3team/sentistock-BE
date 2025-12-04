@@ -9,7 +9,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;  
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
@@ -19,8 +20,11 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKeyPlain;
 
-    @Value("${jwt.token-validity-ms:3600000}") //유효기간 1시간
-    private long validityInMs;
+    @Value("${jwt.access-token-validity-ms:1800000}")      // 30분
+    private long accessTokenValidityInMs;
+
+    @Value("${jwt.refresh-token-validity-ms:1209600000}")  // 14일
+    private long refreshTokenValidityInMs;
 
     private SecretKey secretKey;
 
@@ -32,35 +36,34 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        this.secretKey = Keys.hmacShaKeyFor(secretKeyPlain.getBytes());
+        this.secretKey = Keys.hmacShaKeyFor(secretKeyPlain.getBytes(StandardCharsets.UTF_8));
     }
 
-    // 토큰 생성 
-    public String createToken(String userId) {
+
+    public String createAccessToken(String userId) {
+        return createToken(userId, accessTokenValidityInMs, "ACCESS");
+    }
+
+    public String createRefreshToken(String userId) {
+        return createToken(userId, refreshTokenValidityInMs, "REFRESH");
+    }
+
+    private String createToken(String userId, long validityInMs, String type) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(validityInMs);
 
         return Jwts.builder()
-                .subject(userId)                     
-                .issuedAt(Date.from(now))            
-                .expiration(Date.from(expiry))       
-                .signWith(secretKey)                
+                .subject(userId)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .claim("type", type)   
+                .signWith(secretKey)
                 .compact();
-    }
-
-    public Authentication getAuthentication(String token) {
-        String userId = getUserId(token);
-        var userDetails = userDetailsService.loadUserByUsername(userId);
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                "",
-                userDetails.getAuthorities()
-        );
     }
 
     public String getUserId(String token) {
         return Jwts.parser()
-                .verifyWith(secretKey)              
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -77,5 +80,31 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    // 토큰이 REFRESH인지 확인
+    public boolean isRefreshToken(String token) {
+        try {
+            var claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String type = claims.get("type", String.class);
+            return "REFRESH".equals(type);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public Authentication getAuthentication(String token) {
+        String userId = getUserId(token);
+        var userDetails = userDetailsService.loadUserByUsername(userId);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                "",
+                userDetails.getAuthorities()
+        );
     }
 }
