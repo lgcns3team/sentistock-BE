@@ -6,6 +6,7 @@ import com.example.SentiStock_backend.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "입력값 오류 또는 중복된 사용자"),
     })
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody SignUpRequestDto request) {
+    public ResponseEntity<String> signup(@Valid @RequestBody SignUpRequestDto request) {
         authService.signup(request);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
