@@ -1,4 +1,4 @@
-package com.example.SentiStock_backend.auth.dto;
+package com.example.SentiStock_backend.auth.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

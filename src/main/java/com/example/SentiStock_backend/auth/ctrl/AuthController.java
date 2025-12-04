@@ -1,6 +1,6 @@
 package com.example.SentiStock_backend.auth.ctrl;
 
-import com.example.SentiStock_backend.auth.dto.*;
+import com.example.SentiStock_backend.auth.domain.dto.*;
 import com.example.SentiStock_backend.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

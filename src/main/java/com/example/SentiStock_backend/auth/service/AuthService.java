@@ -1,6 +1,6 @@
 package com.example.SentiStock_backend.auth.service;
 
-import com.example.SentiStock_backend.auth.dto.*;
+import com.example.SentiStock_backend.auth.domain.dto.*;
 import com.example.SentiStock_backend.auth.jwt.JwtTokenProvider;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
