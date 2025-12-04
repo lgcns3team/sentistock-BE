@@ -27,6 +27,6 @@ replay_pid*
 !gradle/wrapper/gradle-wrapper.jar
 .gradle/
 *.log
-build/git rm -r --cached build
+build/
 *.yml
 *.yaml
