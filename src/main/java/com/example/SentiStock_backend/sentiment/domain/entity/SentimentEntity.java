@@ -1,4 +1,4 @@
-package com.example.sentiment.domain.entity;
+package com.example.SentiStock_backend.sentiment.domain.entity;
 
 
 import jakarta.persistence.Column;

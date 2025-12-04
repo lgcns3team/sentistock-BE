@@ -1,4 +1,4 @@
-package com.example.sentiment.domain.dto;
+package com.example.SentiStock_backend.sentiment.domain.dto;
 public class SentimentResponseDTO {
     
 }
