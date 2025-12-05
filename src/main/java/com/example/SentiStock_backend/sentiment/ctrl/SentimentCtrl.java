@@ -1,6 +1,7 @@
 package com.example.SentiStock_backend.sentiment.ctrl;
 
 import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDTO;
+import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDTO;
 import com.example.SentiStock_backend.sentiment.service.SentimentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +27,9 @@ public class SentimentCtrl {
         return sentimentService.getRecent3Sentiments(companyId);
     }
 
-    /** 감정 히스토리(최근 7일) 조회 */
     @GetMapping("/history/{companyId}")
-    public List<SentimentResponseDTO> getSentimentHistory(@PathVariable String companyId) {
+    public List<StocksScoreResponseDTO> getSentimentHistory(@PathVariable String companyId) {
         return sentimentService.getSentimentHistory(companyId);
     }
+
 }
