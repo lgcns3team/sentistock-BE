@@ -21,12 +21,13 @@ public class SentimentCtrl {
         return sentimentService.getCompanySentimentScore(companyId);
     }
 
-    /** 종목 최신 감정 점수 3개 조회 */
+    /** 기사 최신 감정 점수 3개 조회 */
     @GetMapping("/recent/{companyId}")
     public List<SentimentResponseDTO> getRecentSentiments(@PathVariable String companyId) {
         return sentimentService.getRecent3Sentiments(companyId);
     }
 
+    /** 종목 감정 점수 7개 조회 (히스토리)*/
     @GetMapping("/history/{companyId}")
     public List<StocksScoreResponseDTO> getSentimentHistory(@PathVariable String companyId) {
         return sentimentService.getSentimentHistory(companyId);
