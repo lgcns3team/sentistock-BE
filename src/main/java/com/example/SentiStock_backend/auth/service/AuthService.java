@@ -39,18 +39,36 @@ public class AuthService {
         // 비밀번호 암호화
         String encodedPw = passwordEncoder.encode(request.getPassword());
 
+        // 투자성향 점수 → 투자성향 타입 변환
+        String investorType = convertScoreToInvestorType(request.getInvestorScore());
+
         // UserEntity 생성
         UserEntity user = UserEntity.builder()
                 .nickname(request.getNickname())
                 .userId(request.getUserId())
                 .userPw(encodedPw)
                 .userEmail(request.getUserEmail())
-                .investorType(request.getInvestorType())
+                .investorType(investorType)  
                 .isSubscribe(request.isSubscribe())
                 .refreshToken(null)   // 처음에는 Refresh Token 없음
                 .build();
 
         userRepository.save(user);
+    }
+
+    // 점수 → 투자성향 매핑 
+    private String convertScoreToInvestorType(int score) {
+        if (score >= 30) {
+            return "공격투자형";
+        } else if (score >= 25) {
+            return "적극투자형";
+        } else if (score >= 20) {
+            return "위험중립형";
+        } else if (score >= 15) {
+            return "안전추구형";
+        } else {
+            return "안정형";
+        }
     }
 
     /**

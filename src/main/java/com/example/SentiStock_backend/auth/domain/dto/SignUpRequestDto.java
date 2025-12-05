@@ -5,6 +5,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,8 +45,10 @@ public class SignUpRequestDto {
     @Email(message = "올바른 이메일 형식이 아닙니다.")
     private String userEmail;
 
-    @Schema(description = "투자 성향", example = "위험중립형")
-    private String investorType;
+    // 🔥 설문 총점 (지금은 사용자가 직접 입력, 나중에는 프론트에서 설문으로 계산해서 넣어줄 값)
+    @Schema(description = "투자 성향 설문 점수 합계", example = "27")
+    @NotNull(message = "설문 점수를 입력해주세요.")
+    private Integer investorScore;
 
     @Schema(description = "구독 여부", example = "true")
     private boolean isSubscribe;
