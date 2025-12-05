@@ -10,11 +10,15 @@ import com.example.SentiStock_backend.sentiment.repository.SentimentRepository;
 import com.example.SentiStock_backend.sentiment.repository.StocksScoreRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SentimentService {
@@ -22,7 +26,6 @@ public class SentimentService {
         private final SentimentRepository sentimentRepository;
         private final NewsRepository newsRepository;
         private final StocksScoreRepository stocksScoreRepository;
-
 
         /**
          * 종목 감정 점수 평균 계산
@@ -79,6 +82,29 @@ public class SentimentService {
                                 .sorted((a, b) -> a.getDate().compareTo(b.getDate())) // ASC 정렬
                                 .map(StocksScoreResponseDTO::fromEntity)
                                 .toList();
+        }
+
+        /**
+         * 종목 감정 점수 저장 (평균 감정 점수를 Stocks_score 테이블에 저장)
+         */
+        public void saveCompanySentimentScore(String companyId) {
+
+                Double score = getCompanySentimentScore(companyId); // 평균 감정 점수 계산
+
+                if (score == 0.0) {
+                        log.warn("⚠ 감정 점수 없음 → 저장 스킵: {}", companyId);
+                        return;
+                }
+
+                StocksScoreEntity entity = StocksScoreEntity.builder()
+                                .companyId(companyId)
+                                .score(score)
+                                .date(LocalDateTime.now()) // 저장 시간
+                                .build();
+
+                stocksScoreRepository.save(entity);
+
+                log.info("📌 감정 점수 저장 완료 → {} = {}", companyId, score);
         }
 
 }

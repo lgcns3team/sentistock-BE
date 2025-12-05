@@ -27,10 +27,16 @@ public class SentimentCtrl {
         return sentimentService.getRecent3Sentiments(companyId);
     }
 
-    /** 종목 감정 점수 7개 조회 (히스토리)*/
+    /** 종목 감정 점수 7개 조회 (히스토리) */
     @GetMapping("/history/{companyId}")
     public List<StocksScoreResponseDTO> getSentimentHistory(@PathVariable String companyId) {
         return sentimentService.getSentimentHistory(companyId);
+    }
+
+    /** 종목 감정 점수 저장(수동 실행용) */
+    @PostMapping("/save/{companyId}")
+    public void saveScore(@PathVariable String companyId) {
+        sentimentService.saveCompanySentimentScore(companyId);
     }
 
 }
