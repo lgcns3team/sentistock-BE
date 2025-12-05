@@ -13,8 +13,7 @@ public class LoginResponseDto {
 
     private String accessToken;
     private String refreshToken;
-    private String tokenType;   // 항상 "Bearer"
-
+    private String tokenType;   
     private String userId;
     private String nickname;
     private String investorType;
