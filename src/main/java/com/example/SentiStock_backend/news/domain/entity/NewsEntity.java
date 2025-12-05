@@ -33,6 +33,6 @@ public class NewsEntity {
     @Column(length = 50)
     private String summaryText; // 뉴스 요약문 (NULL 허용)
 
-    @Column(nullable = false)
-    private Long companyId; // 종목 코드 (FK 역할)
+    @Column(nullable = false, length = 6)
+    private String companyId;
 }
