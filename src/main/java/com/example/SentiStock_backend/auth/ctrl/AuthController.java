@@ -2,7 +2,8 @@ package com.example.SentiStock_backend.auth.ctrl;
 
 import com.example.SentiStock_backend.auth.domain.dto.*;
 import com.example.SentiStock_backend.auth.service.AuthService;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -53,4 +54,19 @@ public class AuthController {
         TokenResponseDto response = authService.reissue(request);
         return ResponseEntity.ok(response);
     }
+    // 로그아웃
+    @Operation(summary = "로그아웃", description = "로그아웃 처리")
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+        }
+
+        String userId = userDetails.getUserId();
+        authService.logout(userId);
+        return ResponseEntity.ok("로그아웃 되었습니다.");
+}
+
 }

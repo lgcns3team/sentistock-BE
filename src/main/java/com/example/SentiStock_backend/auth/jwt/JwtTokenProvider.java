@@ -107,4 +107,8 @@ public class JwtTokenProvider {
                 userDetails.getAuthorities()
         );
     }
+
+    public long getRefreshTokenValidityInMs() {
+        return refreshTokenValidityInMs;
+    }
 }

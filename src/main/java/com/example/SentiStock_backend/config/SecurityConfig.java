@@ -35,9 +35,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",     // 로그인/회원가입
-                                "/swagger-ui/**",   // Swagger UI
-                                "/v3/api-docs/**"   // Swagger OpenAPI 문서
+                                "/api/auth/signup",
+                                "/api/auth/login",
+                                "/api/auth/reissue",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"  // Swagger OpenAPI 문서
                         ).permitAll()
 
                         .anyRequest().authenticated()
