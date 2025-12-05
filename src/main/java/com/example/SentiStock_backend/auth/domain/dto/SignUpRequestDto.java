@@ -50,6 +50,6 @@ public class SignUpRequestDto {
     @NotNull(message = "설문 점수를 입력해주세요.")
     private Integer investorScore;
 
-    @Schema(description = "구독 여부", example = "true")
+    @Schema(description = "구독 여부", example = "false")
     private boolean isSubscribe;
 }

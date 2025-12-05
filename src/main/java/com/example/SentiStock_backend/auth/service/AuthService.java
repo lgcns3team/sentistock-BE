@@ -49,7 +49,7 @@ public class AuthService {
                 .userPw(encodedPw)
                 .userEmail(request.getUserEmail())
                 .investorType(investorType)  
-                .isSubscribe(request.isSubscribe())
+                .isSubscribe(false)
                 .refreshToken(null)   // 처음에는 Refresh Token 없음
                 .build();
 
