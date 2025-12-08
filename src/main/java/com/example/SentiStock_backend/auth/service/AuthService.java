@@ -47,13 +47,15 @@ public class AuthService {
 
         // UserEntity 생성
         UserEntity user = UserEntity.builder()
-                .nickname(request.getNickname())
-                .userId(request.getUserId())
-                .userPw(encodedPw)
-                .userEmail(request.getUserEmail())
-                .investorType(investorType)
-                .isSubscribe(false)
-                .build();
+            .nickname(request.getNickname())
+            .userId(request.getUserId())
+            .userPw(encodedPw)
+            .userEmail(request.getUserEmail())
+            .investorType(investorType)
+            .isSubscribe(false)
+            .provider("LOCAL")        
+            .providerId(null)         
+            .build();
 
         userRepository.save(user);
     }

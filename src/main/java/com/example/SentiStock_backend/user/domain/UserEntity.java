@@ -45,6 +45,11 @@ public class UserEntity {
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
 
+    @Column(name = "provider", nullable = false, length = 20)
+    private String provider;
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
 
 
     public void changeNickname(String nickname) {
@@ -63,5 +68,10 @@ public class UserEntity {
         this.isSubscribe = subscribe;
     }
 
-
+    @PrePersist
+    public void prePersist() {
+        if (this.provider == null) {
+            this.provider = "LOCAL";
+        }
+    }
 }
