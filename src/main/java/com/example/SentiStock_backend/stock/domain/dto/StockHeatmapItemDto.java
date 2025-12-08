@@ -1,5 +1,6 @@
 package com.example.SentiStock_backend.stock.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +12,18 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "섹터 히트맵에서 표시되는 종목 요약 정보")
 public class StockHeatmapItemDto {
 
-    private String companyId;      // 종목코드
-    private String companyName;    // 종목명
+    @Schema(description = "종목 코드", example = "005930")
+    private String companyId;
+    
+    @Schema(description = "종목명", example = "삼성전자")
+    private String companyName;    
 
-    private Long currentPrice;     // 현재가
-    private Double changeRate;     // 등락률
+    @Schema(description = "현재가", example = "198500")
+    private Long currentPrice;
+
+    @Schema(description = "등락률(%)", example = "1.23")
+    private Double changeRate;
 }
