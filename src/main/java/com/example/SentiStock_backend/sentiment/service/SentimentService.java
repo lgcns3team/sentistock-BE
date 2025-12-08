@@ -91,8 +91,8 @@ public class SentimentService {
 
                 Double score = getCompanySentimentScore(companyId); // 평균 감정 점수 계산
 
-                if (score == 0.0) {
-                        log.warn("⚠ 감정 점수 없음 → 저장 스킵: {}", companyId);
+                if (score == null) {
+                        log.warn("감정 점수 데이터 없음 → 저장 스킵: {}", companyId);
                         return;
                 }
 
@@ -104,7 +104,7 @@ public class SentimentService {
 
                 stocksScoreRepository.save(entity);
 
-                log.info("📌 감정 점수 저장 완료 → {} = {}", companyId, score);
+                log.info("감정 점수 저장 완료 → {} = {}", companyId, score);
         }
 
 }

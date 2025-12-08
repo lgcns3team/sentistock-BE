@@ -34,7 +34,7 @@ public class SentimentCtrl {
     }
 
     /** 종목 감정 점수 저장(수동 실행용) */
-    @PostMapping("/save/{companyId}")
+    @PutMapping("/save/{companyId}")
     public void saveScore(@PathVariable String companyId) {
         sentimentService.saveCompanySentimentScore(companyId);
     }
