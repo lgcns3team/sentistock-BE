@@ -53,8 +53,6 @@ public class AuthService {
             .userEmail(request.getUserEmail())
             .investorType(investorType)
             .isSubscribe(false)
-            .provider("LOCAL")        
-            .providerId(null)         
             .build();
 
         userRepository.save(user);
