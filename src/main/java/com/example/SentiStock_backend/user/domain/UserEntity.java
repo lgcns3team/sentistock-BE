@@ -8,7 +8,8 @@ import lombok.*;
     name = "users",
     indexes = {
         @Index(name = "uk_users_user_id", columnList = "user_id", unique = true),
-        @Index(name = "uk_users_user_email", columnList = "user_email", unique = true)
+        @Index(name = "uk_users_user_email", columnList = "user_email", unique = true),
+        @Index(name = "uk_users_provider_provider_id", columnList = "provider, provider_id")
     }
 )
 @Getter
@@ -37,13 +38,19 @@ public class UserEntity {
     @Column(name = "user_email", nullable = false, length = 50, unique = true)
     private String userEmail;
 
-    // 투자 성향 
-    @Column(name = "investor_type", nullable = false, length = 50)
+    // 투자 성향
+    @Column(name = "investor_type", length = 50)
     private String investorType;
 
     // 구독 여부
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
+
+    @Column(name = "provider", length = 20)
+    private String provider;
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
@@ -61,4 +68,8 @@ public class UserEntity {
         this.isSubscribe = subscribe;
     }
 
+    public void changeProvider(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
 }

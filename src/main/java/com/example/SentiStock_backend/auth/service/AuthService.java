@@ -7,6 +7,9 @@ import com.example.SentiStock_backend.auth.domain.dto.SignUpRequestDto;
 import com.example.SentiStock_backend.auth.domain.dto.TokenReissueRequestDto;
 import com.example.SentiStock_backend.auth.domain.dto.TokenResponseDto;
 import com.example.SentiStock_backend.auth.jwt.JwtTokenProvider;
+import com.example.SentiStock_backend.auth.oauth.dto.KakaoTokenResponse;
+import com.example.SentiStock_backend.auth.oauth.dto.KakaoUserInfoResponse;
+import com.example.SentiStock_backend.auth.oauth.service.KakaoOAuthService;
 import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final KakaoOAuthService kakaoOAuthService;
 
     // 회원가입
     @Transactional
@@ -47,13 +52,13 @@ public class AuthService {
 
         // UserEntity 생성
         UserEntity user = UserEntity.builder()
-            .nickname(request.getNickname())
-            .userId(request.getUserId())
-            .userPw(encodedPw)
-            .userEmail(request.getUserEmail())
-            .investorType(investorType)
-            .isSubscribe(false)
-            .build();
+                .nickname(request.getNickname())
+                .userId(request.getUserId())
+                .userPw(encodedPw)
+                .userEmail(request.getUserEmail())
+                .investorType(investorType)
+                .isSubscribe(false)
+                .build();
 
         userRepository.save(user);
     }
@@ -114,6 +119,91 @@ public class AuthService {
                 .build();
     }
 
+    //카카오 OAuth 로그인
+    @Transactional
+    public LoginResponseDto kakaoLogin(String code) {
+
+  
+        KakaoTokenResponse tokenResponse = kakaoOAuthService.getKakaoToken(code);
+        KakaoUserInfoResponse userInfo =
+                kakaoOAuthService.getUserInfo(tokenResponse.getAccess_token());
+
+        Long kakaoId = userInfo.getId();
+        String email = userInfo.getKakao_account() != null
+                ? userInfo.getKakao_account().getEmail()
+                : null;
+        String nickname = (userInfo.getKakao_account() != null
+                && userInfo.getKakao_account().getProfile() != null)
+                ? userInfo.getKakao_account().getProfile().getNickname()
+                : null;
+
+        String provider = "KAKAO";
+        String providerId = String.valueOf(kakaoId);
+
+
+        UserEntity user = userRepository
+                .findByProviderAndProviderId(provider, providerId)
+                .orElseGet(() -> createKakaoUser(provider, providerId, email, nickname));
+
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
+
+        refreshTokenRepository.deleteByUser(user);
+
+        RefreshToken tokenEntity = RefreshToken.builder()
+                .user(user)
+                .token(refreshToken)
+                .expiresAt(
+                        Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
+                )
+                .revoked(false)
+                .build();
+
+        refreshTokenRepository.save(tokenEntity);
+
+
+        return LoginResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .userId(user.getUserId())
+                .nickname(user.getNickname())
+                .investorType(user.getInvestorType())
+                .subscribe(user.isSubscribe())
+                .build();
+    }
+
+    //최초 카카오 로그인 시 UserEntity 생성
+    private UserEntity createKakaoUser(String provider,
+                                       String providerId,
+                                       String email,
+                                       String nickname) {
+
+        //user_id는 고유하게 "kakao_{카카오ID}" 형식으로 생성
+        String userId = "kakao_" + providerId;
+
+        //user_pw를 채우기 위한 랜덤 비밀번호
+        String randomPw = UUID.randomUUID().toString();
+        String encodedPw = passwordEncoder.encode(randomPw);
+
+        // investorType 기본값 
+        String defaultInvestorType = "위험중립형";
+
+        UserEntity user = UserEntity.builder()
+                .nickname(nickname != null ? nickname : "카카오유저_" + providerId)
+                .userId(userId)
+                .userPw(encodedPw)
+                .userEmail(email != null ? email : (userId + "@kakao.local"))
+                .investorType(defaultInvestorType)
+                .isSubscribe(false)
+                .provider(provider)
+                .providerId(providerId)
+                .build();
+
+        return userRepository.save(user);
+    }
+
     // 토큰 재발급
     @Transactional
     public TokenResponseDto reissue(TokenReissueRequestDto request) {
@@ -163,7 +253,7 @@ public class AuthService {
 
         refreshTokenRepository.save(newTokenEntity);
 
-        // 9) 응답 DTO 리턴
+        // 응답 DTO 리턴
         return TokenResponseDto.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
