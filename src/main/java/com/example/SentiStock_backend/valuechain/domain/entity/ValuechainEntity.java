@@ -1,6 +1,4 @@
-package com.example.SentiStock_backend.news.domain.entity;
-
-import java.time.LocalDateTime;
+package com.example.SentiStock_backend.valuechain.domain.entity;
 
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 
@@ -20,33 +18,26 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "News")
+@Table(name = "Valuechains")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NewsEntity {
+public class ValuechainEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String title;
-
-    @Column(nullable = false)
-    private LocalDateTime date;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String fullText;
-
-    @Column(nullable = false, length = 500)
-    private String url;
-
-    @Column(nullable = true, length = 50)
-    private String summaryText;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_company_id", nullable = false)
+    private CompanyEntity toCompany;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private CompanyEntity company;
+    @JoinColumn(name = "from_company_id", nullable = false)
+    private CompanyEntity fromCompany;
+
+    @Column(nullable = false, length = 50)
+    private String relationship; 
 }
