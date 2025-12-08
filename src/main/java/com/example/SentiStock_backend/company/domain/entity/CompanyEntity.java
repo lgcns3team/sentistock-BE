@@ -24,13 +24,13 @@ import lombok.Setter;
 @Builder
 public class CompanyEntity {
     @Id
-    @Column(length = 10)
+    @Column(name = "id", length = 10, nullable = false)
     private String id; 
 
-    @Column(length = 50)
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sector_id")
+    @JoinColumn(name = "sector_id", nullable = false)
     private SectorEntity sector;
 }

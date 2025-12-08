@@ -30,19 +30,31 @@ public class StockEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "date", nullable = false)
     private LocalDateTime date; 
 
-    private Long stckPrpr;  // 현재가
-    private Long stckOprc;  // 시가
-    private Long stckHgpr;  // 고가
-    private Long stckLwpr;  // 저가
-    private Long acmlVol;   // 누적 거래량
-    private Long stckPrdyClpr; // 전일 종가
+    @Column(name = "stck_prpr", nullable = false)
+    private Long stckPrpr;
+
+    @Column(name = "stck_oprc", nullable = false)
+    private Long stckOprc;
+
+    @Column(name = "stck_hgpr", nullable = false)
+    private Long stckHgpr;
+
+    @Column(name = "stck_lwpr", nullable = false)
+    private Long stckLwpr;
+
+    @Column(name = "acml_vol", nullable = false)
+    private Long acmlVol;
+    
+    @Column(name = "stck_prdy_clpr", nullable = false)
+    private Long stckPrdyClpr;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
+    @JoinColumn(name = "company_id", nullable = false)
     private CompanyEntity company;
 }

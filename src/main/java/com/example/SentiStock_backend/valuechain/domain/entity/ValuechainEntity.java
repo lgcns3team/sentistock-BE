@@ -28,6 +28,7 @@ public class ValuechainEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,6 +39,6 @@ public class ValuechainEntity {
     @JoinColumn(name = "from_company_id", nullable = false)
     private CompanyEntity fromCompany;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "relationship", nullable = false, length = 50)
     private String relationship; 
 }

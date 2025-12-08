@@ -29,21 +29,22 @@ import lombok.Setter;
 public class NewsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "title",nullable = false, length = 100)
     private String title;
 
-    @Column(nullable = false)
+    @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "full_text", nullable = false, columnDefinition = "TEXT")
     private String fullText;
 
-    @Column(nullable = false, length = 500)
+    @Column(name = "url",nullable = false, length = 500)
     private String url;
 
-    @Column(nullable = true, length = 50)
+    @Column(name = "summary_text",nullable = true, length = 50)
     private String summaryText;
 
     @ManyToOne(fetch = FetchType.LAZY)
