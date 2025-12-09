@@ -1,4 +1,4 @@
-package com.example.SentiStock_backend.news.domain.entity;
+package com.example.SentiStock_backend.stock.domain.entity;
 
 import java.time.LocalDateTime;
 
@@ -20,32 +20,39 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "News")
+@Table(name = "Stocks")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NewsEntity {
+public class StockEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "title",nullable = false, length = 100)
-    private String title;
-
     @Column(name = "date", nullable = false)
-    private LocalDateTime date;
+    private LocalDateTime date; 
 
-    @Column(name = "full_text", nullable = false, columnDefinition = "TEXT")
-    private String fullText;
+    @Column(name = "stck_prpr", nullable = false)
+    private Long stckPrpr;
 
-    @Column(name = "url",nullable = false, length = 500)
-    private String url;
+    @Column(name = "stck_oprc", nullable = false)
+    private Long stckOprc;
 
-    @Column(name = "summary_text",nullable = true, length = 50)
-    private String summaryText;
+    @Column(name = "stck_hgpr", nullable = false)
+    private Long stckHgpr;
+
+    @Column(name = "stck_lwpr", nullable = false)
+    private Long stckLwpr;
+
+    @Column(name = "acml_vol", nullable = false)
+    private Long acmlVol;
+    
+    @Column(name = "stck_prdy_clpr", nullable = false)
+    private Long stckPrdyClpr;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)

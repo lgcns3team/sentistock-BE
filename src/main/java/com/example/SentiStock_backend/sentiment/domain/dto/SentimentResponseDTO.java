@@ -17,7 +17,7 @@ public class SentimentResponseDTO {
     private String label;
     private Long score;
     private String date;
-    private String newsId;
+    private Long newsId;
 
     public static SentimentResponseDTO fromEntity(SentimentEntity entity) {
         return SentimentResponseDTO.builder()
@@ -28,7 +28,7 @@ public class SentimentResponseDTO {
                 .label(entity.getLabel())
                 .score(entity.getScore())
                 .date(entity.getDate())
-                .newsId(entity.getNewsId())
+                .newsId(entity.getNews() != null ? entity.getNews().getId() : null)
                 .build();
     }
 }

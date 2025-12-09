@@ -1,5 +1,7 @@
 package com.example.SentiStock_backend.sentiment.service;
 
+import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
+import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.news.domain.entity.NewsEntity;
 import com.example.SentiStock_backend.news.repository.NewsRepository;
 import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDTO;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,6 +27,7 @@ public class SentimentService {
         private final SentimentRepository sentimentRepository;
         private final NewsRepository newsRepository;
         private final StocksScoreRepository stocksScoreRepository;
+        private final CompanyRepository companyRepository;
 
         /**
          * 종목 감정 점수 평균 계산
@@ -36,10 +38,10 @@ public class SentimentService {
                 if (newsList.isEmpty())
                         return 0.0;
 
-                List<String> newsIds = newsList.stream()
-                                .map(n -> n.getId().toString())
+                List<Long> newsIds = newsList.stream()
+                                .map(NewsEntity::getId)
                                 .toList();
-
+        
                 List<SentimentEntity> sentimentList = sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds);
 
                 if (sentimentList.isEmpty())
@@ -60,15 +62,15 @@ public class SentimentService {
                 if (newsList.isEmpty())
                         return List.of();
 
-                List<String> newsIds = newsList.stream()
-                                .map(n -> n.getId().toString())
+                List<Long> newsIds = newsList.stream()
+                                .map(NewsEntity::getId)
                                 .toList();
 
                 return sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds)
                                 .stream()
                                 .limit(3)
                                 .map(SentimentResponseDTO::fromEntity)
-                                .collect(Collectors.toList());
+                                .toList();
         }
 
         /**
@@ -92,19 +94,22 @@ public class SentimentService {
                 Double score = getCompanySentimentScore(companyId); // 평균 감정 점수 계산
 
                 if (score == null) {
-                        log.warn("감정 점수 데이터 없음 → 저장 스킵: {}", companyId);
+                        log.warn("감정 점수 없음 → 저장 스킵: {}", companyId);
                         return;
                 }
 
+                CompanyEntity company = companyRepository.findById(companyId)
+                                .orElseThrow(() -> new IllegalArgumentException("회사 없음: " + companyId));
+
                 StocksScoreEntity entity = StocksScoreEntity.builder()
-                                .companyId(companyId)
+                                .company(company)
                                 .score(score)
-                                .date(LocalDateTime.now()) // 저장 시간
+                                .date(LocalDateTime.now())
                                 .build();
 
                 stocksScoreRepository.save(entity);
 
-                log.info("감정 점수 저장 완료 → {} = {}", companyId, score);
+                log.info("감정 점수 저장 완료: {} = {}", companyId, score);
         }
 
 }
