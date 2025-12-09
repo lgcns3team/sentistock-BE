@@ -44,7 +44,7 @@ public UserMeResponseDto updateMyInfo(String userId, UserUpdateRequestDto dto) {
         System.out.println("[DEBUG] 닉네임 변경: " + dto.getNickname());
         user.changeNickname(dto.getNickname());
     }
-
+    // 비밀번호 변경
     if (dto.getNewPassword() != null && !dto.getNewPassword().isBlank()) {
         System.out.println("[DEBUG] 새 비밀번호 요청 들어옴, provider = " + user.getProvider());
 
@@ -53,7 +53,7 @@ public UserMeResponseDto updateMyInfo(String userId, UserUpdateRequestDto dto) {
             String encoded = passwordEncoder.encode(dto.getNewPassword());
             user.changePassword(encoded);
         } else {
-            System.out.println("[DEBUG] 소셜 유저라 비밀번호 변경 무시");
+            throw new IllegalStateException("카카오 회원은 비밀번호 변경이 불가합니다.");
         }
     }
 

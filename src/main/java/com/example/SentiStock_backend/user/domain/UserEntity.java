@@ -54,7 +54,6 @@ public class UserEntity {
     @Column(name = "provider_id", length = 100)
     private String providerId;
 
-    // === 도메인 메서드 ===
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
@@ -77,14 +76,14 @@ public class UserEntity {
         this.providerId = providerId;
     }
 
-    // 분기용 – provider가 null/빈 값이면 LOCAL 취급
+    //provider가 null이면 LOCAL 
     public boolean isLocalUser() {
         return provider == null
                 || provider.isBlank()
                 || "LOCAL".equalsIgnoreCase(provider);
     }
 
-    // 소셜인 경우 true (KAKAO, 향후 GOOGLE 등)
+    // 카카오인 경우 true 
     public boolean isSocialUser() {
         return "KAKAO".equalsIgnoreCase(provider);
     }
