@@ -54,7 +54,7 @@ public class SentimentService {
         }
 
         /**
-         * 최근 감정 점수 3개 조회
+         * 최근 기사 감정 점수 3개 조회
          */
         public List<SentimentResponseDTO> getRecent3Sentiments(String companyId) {
 
@@ -74,7 +74,7 @@ public class SentimentService {
         }
 
         /**
-         * 감정 히스토리 조회 (최근 7개 ASC 정렬)
+         * 종목 감정 히스토리 조회 (최근 7개 ASC 정렬)
          */
         public List<StocksScoreResponseDTO> getSentimentHistory(String companyId) {
 
