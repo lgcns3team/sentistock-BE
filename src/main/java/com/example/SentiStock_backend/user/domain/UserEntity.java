@@ -8,7 +8,8 @@ import lombok.*;
     name = "users",
     indexes = {
         @Index(name = "uk_users_user_id", columnList = "user_id", unique = true),
-        @Index(name = "uk_users_user_email", columnList = "user_email", unique = true)
+        @Index(name = "uk_users_user_email", columnList = "user_email", unique = true),
+        @Index(name = "uk_users_provider_provider_id", columnList = "provider, provider_id")
     }
 )
 @Getter
@@ -37,19 +38,23 @@ public class UserEntity {
     @Column(name = "user_email", nullable = false, length = 50, unique = true)
     private String userEmail;
 
-    // 투자 성향 
-    @Column(name = "investor_type", nullable = false, length = 50)
+    // 투자 성향
+    @Column(name = "investor_type", length = 50)
     private String investorType;
 
     // 구독 여부
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
 
-    // 가입 타입: LOCAL / KAKAO 
-    @Column(name = "provider", nullable = false, length = 20)
+    // 가입 타입: LOCAL / KAKAO / ...
+    @Column(name = "provider", length = 20)
     private String provider;
 
-  
+    // 소셜 로그인에서 사용하는 provider별 고유 id
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
+
+    // === 도메인 메서드 ===
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
@@ -67,14 +72,19 @@ public class UserEntity {
         this.isSubscribe = subscribe;
     }
 
-    // 분기용
+    public void changeProvider(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
+    // 분기용 – provider가 null/빈 값이면 LOCAL 취급
     public boolean isLocalUser() {
         return provider == null
                 || provider.isBlank()
                 || "LOCAL".equalsIgnoreCase(provider);
     }
 
-    // 소셜인 경우 true
+    // 소셜인 경우 true (KAKAO, 향후 GOOGLE 등)
     public boolean isSocialUser() {
         return "KAKAO".equalsIgnoreCase(provider);
     }

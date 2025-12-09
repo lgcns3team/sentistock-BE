@@ -1,8 +1,7 @@
-package com.example.SentiStock_backend.stock.domain.entity;
-
-import java.time.LocalDateTime;
+package com.example.SentiStock_backend.purchase.domain.entity;
 
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
+import com.example.SentiStock_backend.user.domain.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,41 +19,27 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Stocks")
+@Table(name = "Purchase")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StockEntity {
+public class PurchaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "date", nullable = false)
-    private LocalDateTime date; 
-
-    @Column(name = "stck_prpr", nullable = false)
-    private Long stckPrpr;
-
-    @Column(name = "stck_oprc", nullable = false)
-    private Long stckOprc;
-
-    @Column(name = "stck_hgpr", nullable = false)
-    private Long stckHgpr;
-
-    @Column(name = "stck_lwpr", nullable = false)
-    private Long stckLwpr;
-
-    @Column(name = "acml_vol", nullable = false)
-    private Long acmlVol;
-    
-    @Column(name = "stck_prdy_clpr", nullable = false)
-    private Long stckPrdyClpr;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "company_id", nullable = false)  
     private CompanyEntity company;
+
+    @Column(name = "avg_price", nullable = false)
+    private Float avgPrice;
 }
