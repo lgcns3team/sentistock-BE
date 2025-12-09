@@ -29,8 +29,8 @@ public class UserEntity {
     @Column(name = "user_id", nullable = false, length = 50, unique = true)
     private String userId;
 
-    // 암호화된 비밀번호
-    @Column(name = "user_pw", nullable = false, length = 100)
+    // 암호화된 비밀번호 (KAKAO 유저는 null일 수도 있음)
+    @Column(name = "user_pw", length = 100)
     private String userPw;
 
     // 이메일
@@ -45,7 +45,11 @@ public class UserEntity {
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
 
+    // 가입 타입: LOCAL / KAKAO 
+    @Column(name = "provider", nullable = false, length = 20)
+    private String provider;
 
+  
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
@@ -63,5 +67,15 @@ public class UserEntity {
         this.isSubscribe = subscribe;
     }
 
+    // 분기용
+    public boolean isLocalUser() {
+        return provider == null
+                || provider.isBlank()
+                || "LOCAL".equalsIgnoreCase(provider);
+    }
 
+    // 소셜인 경우 true
+    public boolean isSocialUser() {
+        return "KAKAO".equalsIgnoreCase(provider);
+    }
 }
