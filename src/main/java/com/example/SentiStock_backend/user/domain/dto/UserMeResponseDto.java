@@ -7,10 +7,10 @@ import lombok.Getter;
 @Builder
 public class UserMeResponseDto {
 
-    private Long id;            // PK
-    private String userId;      // 로그인 아이디
-    private String nickname;    // 닉네임
-    private String userEmail;   // 이메일
-    private String investorType;// 투자 성향
-    private boolean subscribe;  // 구독 여부
+    private Long id;             // PK
+    private String userId;       // 아이디
+    private String nickname;     // 닉네임
+    private String userEmail;    // 이메일
+    // 비밀번호는 실제 값 대신 마스킹된 문자열만 전달
+    private String passwordMasked;
 }

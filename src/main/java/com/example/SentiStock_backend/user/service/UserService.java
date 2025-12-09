@@ -15,6 +15,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserMeResponseDto getMyInfo(String userId) {
+
         UserEntity user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
@@ -23,8 +24,7 @@ public class UserService {
                 .userId(user.getUserId())
                 .nickname(user.getNickname())
                 .userEmail(user.getUserEmail())
-                .investorType(user.getInvestorType())
-                .subscribe(user.isSubscribe())
+                .passwordMasked("********")   // 절대 실제 비밀번호 내려주지 않음
                 .build();
     }
 }
