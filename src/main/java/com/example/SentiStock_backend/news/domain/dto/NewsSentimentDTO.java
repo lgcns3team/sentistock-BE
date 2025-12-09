@@ -15,4 +15,6 @@ public class NewsSentimentDTO {
     private Long newsId;
     private String title;
     private Long score;
+    private String url;
+
 }

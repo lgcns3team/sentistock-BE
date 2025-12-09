@@ -33,6 +33,7 @@ public class NewsService {
                             .newsId(news.getId())
                             .title(news.getTitle())
                             .score(sentiment != null ? sentiment.getScore() : null)
+                            .url(news.getUrl())
                             .build();
                 })
                 .toList();
