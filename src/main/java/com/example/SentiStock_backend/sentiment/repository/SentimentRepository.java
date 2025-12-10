@@ -2,6 +2,8 @@ package com.example.SentiStock_backend.sentiment.repository;
 
 import com.example.SentiStock_backend.sentiment.domain.entity.SentimentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,5 +27,20 @@ public interface SentimentRepository extends JpaRepository<SentimentEntity, Long
      * (최신 뉴스와 감정 점수 매칭용)
      */
     Optional<SentimentEntity> findTopByNewsIdOrderByDateDesc(Long newsId);
-   
+
+    /**
+     * 종목별 감정 비율 집계 조회
+     */
+    @Query(value = """
+                SELECT
+                    SUM(CASE WHEN s.label = 'POS' THEN 1 ELSE 0 END) AS posCount,
+                    SUM(CASE WHEN s.label = 'NEG' THEN 1 ELSE 0 END) AS negCount,
+                    SUM(CASE WHEN s.label = 'NEU' THEN 1 ELSE 0 END) AS neuCount,
+                    COUNT(*) AS totalCount
+                FROM sentiments s
+                JOIN news n ON s.news_id = n.id
+                WHERE n.company_id = :companyId
+            """, nativeQuery = true)
+    List<Object[]> getSentimentCountByCompany(@Param("companyId") String companyId);
+
 }
