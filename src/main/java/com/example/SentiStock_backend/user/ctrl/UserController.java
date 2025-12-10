@@ -71,7 +71,8 @@ public class UserController {
 
     // 온보딩 완료 처리
     @Operation(summary = "온보딩 완료 (설문 + 관심 섹터 등록)",
-               description = "카카오/로컬 사용자 모두 설문 점수와 관심섹터 5개를 저장하여 투자성향과 관심 섹터를 확정합니다.")
+               description = "카카오/로컬 사용자 모두 설문 점수와 관심섹터 5개를 저장하여 투자성향과 관심 섹터를 확정합니다."+
+               "카카오톡 회원가입 직후 Response Body에 onboardingRequired: true 일때 이 api를 호출하여 설문과 섹터지정을 하고 json형태로 보내기" )
     @PatchMapping("/me/onboarding")
     public ResponseEntity<Void> completeOnboarding(
             @AuthenticationPrincipal CustomUserDetails userDetails,
