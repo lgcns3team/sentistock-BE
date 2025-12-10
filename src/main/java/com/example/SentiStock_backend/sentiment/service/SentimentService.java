@@ -4,6 +4,7 @@ import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.news.domain.entity.NewsEntity;
 import com.example.SentiStock_backend.news.repository.NewsRepository;
+import com.example.SentiStock_backend.sentiment.domain.dto.SentimentRatioResponseDTO;
 import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDTO;
 import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDTO;
 import com.example.SentiStock_backend.sentiment.domain.entity.SentimentEntity;
@@ -41,7 +42,7 @@ public class SentimentService {
                 List<Long> newsIds = newsList.stream()
                                 .map(NewsEntity::getId)
                                 .toList();
-        
+
                 List<SentimentEntity> sentimentList = sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds);
 
                 if (sentimentList.isEmpty())
@@ -110,6 +111,46 @@ public class SentimentService {
                 stocksScoreRepository.save(entity);
 
                 log.info("감정 점수 저장 완료: {} = {}", companyId, score);
+        }
+
+        /**
+         * 종목별 감정 비율 조회
+         */
+        public SentimentRatioResponseDTO getSentimentRatio(String companyId) {
+
+                List<Object[]> resultList = sentimentRepository.getSentimentCountByCompany(companyId);
+
+                if (resultList == null || resultList.isEmpty()) {
+                        return new SentimentRatioResponseDTO(companyId, 0L, 0, 0, 0);
+                }
+
+                Object[] result = resultList.get(0);
+
+                Long posCount = result[0] == null ? 0L : ((Number) result[0]).longValue();
+                Long negCount = result[1] == null ? 0L : ((Number) result[1]).longValue();
+                Long neuCount = result[2] == null ? 0L : ((Number) result[2]).longValue();
+                Long totalCount = ((Number) result[3]).longValue();
+                
+                if (totalCount == 0) {
+                        log.warn("⚠ totalCount is zero for companyId={}", companyId);
+                        return new SentimentRatioResponseDTO(companyId, 0L, 0, 0, 0);
+                }
+
+                double posRatio = (posCount * 100.0) / totalCount;
+                double negRatio = (negCount * 100.0) / totalCount;
+                double neuRatio = (neuCount * 100.0) / totalCount;
+
+                int posInt = (int) Math.round(posRatio);
+                int negInt = (int) Math.round(negRatio);
+                int neuInt = (int) Math.round(neuRatio);
+
+
+                return new SentimentRatioResponseDTO(
+                                companyId,
+                                totalCount,
+                                posInt,
+                                negInt,
+                                neuInt);
         }
 
 }
