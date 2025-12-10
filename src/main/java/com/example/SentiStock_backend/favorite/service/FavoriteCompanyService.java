@@ -5,6 +5,10 @@ import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
 import com.example.SentiStock_backend.favorite.domain.entity.FavoriteCompanyEntity;
 import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;
+import com.example.SentiStock_backend.sentiment.service.SentimentService;
+import com.example.SentiStock_backend.stock.domain.dto.StockChangeInfo;
+import com.example.SentiStock_backend.stock.domain.dto.StockPriceDto;
+import com.example.SentiStock_backend.stock.service.StockService;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 
@@ -21,6 +25,9 @@ public class FavoriteCompanyService {
     private final FavoriteCompanyRepository favoriteCompanyRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final StockService stockService;
+    private final SentimentService sentimentService;
+    
 
     
     //현재 즐겨찾기 여부 조회 
@@ -59,7 +66,33 @@ public class FavoriteCompanyService {
     
     @Transactional(readOnly = true)
     public List<FavoriteCompanyResponseDto> getMyFavoriteCompanies(Long userId) {
-        return favoriteCompanyRepository.findFavoriteCompaniesByUserId(userId);
+
+        List<FavoriteCompanyEntity> favorites =
+                favoriteCompanyRepository.findFavoriteCompaniesByUserId(userId);
+
+        return favorites.stream()
+                .map(fc -> {
+                    CompanyEntity company = fc.getCompany();
+                    String companyId = company.getId();
+
+                    List<StockPriceDto> candles = stockService.getHourlyCandles(companyId);
+
+                    StockChangeInfo change = stockService.getLatestPriceAndChange(companyId);
+
+                    Double avgScore = sentimentService.getCompanySentimentScore(companyId);
+                    int sentiScore = (avgScore == null)
+                            ? 0
+                            : (int) Math.round(avgScore);
+
+                    return new FavoriteCompanyResponseDto(
+                            companyId,
+                            company.getName(),
+                            candles,
+                            change,
+                            sentiScore
+                    );
+                })
+                .toList();
     }
 
 }

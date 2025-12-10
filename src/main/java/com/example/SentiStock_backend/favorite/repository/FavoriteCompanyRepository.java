@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-
 public interface FavoriteCompanyRepository
         extends JpaRepository<FavoriteCompanyEntity, FavoriteCompanyId> {
 
@@ -18,15 +17,12 @@ public interface FavoriteCompanyRepository
     Optional<FavoriteCompanyEntity> findByUserIdAndCompanyId(Long userId, String companyId);
 
     List<FavoriteCompanyEntity> findAllByUserId(Long userId);
-    
-    @Query("""
-        select new com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto(
-            fc.company.id,
-            fc.company.name
-        )
-        from FavoriteCompanyEntity fc
-        where fc.userId = :userId
-        """)
-    List<FavoriteCompanyResponseDto> findFavoriteCompaniesByUserId(@Param("userId") Long userId);
 
+    @Query("""
+            select fc
+            from FavoriteCompanyEntity fc
+            join fetch fc.company c
+            where fc.user.id = :userId
+            """)
+    List<FavoriteCompanyEntity> findFavoriteCompaniesByUserId(@Param("userId") Long userId);
 }
