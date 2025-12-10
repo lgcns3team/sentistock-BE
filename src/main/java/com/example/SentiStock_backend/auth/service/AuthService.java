@@ -38,7 +38,7 @@ public class AuthService {
     private final SectorRepository sectorRepository;
     private final FavoriteSectorRepository favoriteSectorRepository;
 
-    // 회원가입
+    // 회원가입 (로컬)
     @Transactional
     public void signup(SignUpRequestDto request) {
         // 아이디 중복 체크
@@ -110,7 +110,6 @@ public class AuthService {
             throw new IllegalArgumentException("관심 섹터는 중복 없이 정확히 5개 선택해야 합니다.");
         }
 
-
         distinctIds.forEach(sectorId -> {
             SectorEntity sector = sectorRepository.findById(sectorId)
                     .orElseThrow(() ->
@@ -120,7 +119,6 @@ public class AuthService {
             favoriteSectorRepository.save(entity);
         });
     }
-
 
     // 로그인
     @Transactional
@@ -151,6 +149,11 @@ public class AuthService {
 
         refreshTokenRepository.save(tokenEntity);
 
+        // 온보딩 필요 여부 계산
+        boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
+        boolean onboardingRequired =
+                "없음".equals(user.getInvestorType()) || !hasFavoriteSectors;
+
         // 응답 DTO
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
@@ -160,10 +163,12 @@ public class AuthService {
                 .nickname(user.getNickname())
                 .investorType(user.getInvestorType())
                 .subscribe(user.isSubscribe())
+                // 응답에 온보딩 플래그 포함
+                .onboardingRequired(onboardingRequired)
                 .build();
     }
 
-    //카카오 OAuth 로그인
+    // 카카오 OAuth 로그인
     @Transactional
     public LoginResponseDto kakaoLogin(String code) {
 
@@ -203,6 +208,11 @@ public class AuthService {
 
         refreshTokenRepository.save(tokenEntity);
 
+        // 카카오 로그인도 온보딩 여부 계산
+        boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
+        boolean onboardingRequired =
+                "없음".equals(user.getInvestorType()) || !hasFavoriteSectors;
+
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -211,24 +221,26 @@ public class AuthService {
                 .nickname(user.getNickname())
                 .investorType(user.getInvestorType())
                 .subscribe(user.isSubscribe())
+                // 응답에 온보딩 플래그 포함
+                .onboardingRequired(onboardingRequired)
                 .build();
     }
 
-    //최초 카카오 로그인 시 UserEntity 생성
+    // 최초 카카오 로그인 시 UserEntity 생성
     private UserEntity createKakaoUser(String provider,
                                        String providerId,
                                        String email,
                                        String nickname) {
 
-        //user_id는 고유하게 "kakao_{카카오ID}" 형식으로 생성
+        // user_id는 고유하게 "kakao_{카카오ID}" 형식으로 생성
         String userId = "kakao_" + providerId;
 
-        //user_pw를 채우기 위한 랜덤 비밀번호
+        // user_pw를 채우기 위한 랜덤 비밀번호
         String randomPw = UUID.randomUUID().toString();
         String encodedPw = passwordEncoder.encode(randomPw);
 
-        // investorType 기본값
-        String defaultInvestorType = "위험중립형";
+        // 카카오 기본 투자성향을 "없음"으로 설정
+        String defaultInvestorType = "없음";
 
         UserEntity user = UserEntity.builder()
                 .nickname(nickname != null ? nickname : "카카오유저_" + providerId)

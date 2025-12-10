@@ -18,4 +18,5 @@ public class LoginResponseDto {
     private String nickname;
     private String investorType;
     private boolean subscribe;
+    private boolean onboardingRequired;
 }

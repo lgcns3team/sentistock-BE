@@ -12,4 +12,7 @@ public interface FavoriteSectorRepository extends JpaRepository<FavoriteSectorEn
     void deleteAllByUserId(Long userId);
 
     boolean existsByUserIdAndSectorId(Long userId, Long sectorId);
+
+    boolean existsByUserId(Long userId);
+
 }
