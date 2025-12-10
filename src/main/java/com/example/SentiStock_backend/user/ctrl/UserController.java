@@ -1,13 +1,18 @@
 package com.example.SentiStock_backend.user.ctrl;
 
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
+import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.service.UserService;
+import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final FavoriteCompanyService favoriteCompanyService;
 
     @Operation(
             summary = "내 정보 조회",
@@ -47,4 +53,18 @@ public class UserController {
         String userId = userDetails.getUserId();
         return userService.updateMyInfo(userId, request);
     }
+    
+    // 즐찾 조회
+    @Operation(
+        summary = "내 즐겨찾기 종목 목록 조회",
+        description = "로그인한 사용자가 즐겨찾기한 종목의 코드(id)와 이름(name)을 반환합니다."
+    )
+    @GetMapping("/me/favorites/companies")
+    public List<FavoriteCompanyResponseDto> getMyFavoriteCompanies(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getId();
+        return favoriteCompanyService.getMyFavoriteCompanies(userId);
+    }
+
 }

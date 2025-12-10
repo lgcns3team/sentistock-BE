@@ -2,10 +2,13 @@ package com.example.SentiStock_backend.favorite.service;
 
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.company.repository.CompanyRepository;
+import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
 import com.example.SentiStock_backend.favorite.domain.entity.FavoriteCompanyEntity;
 import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
+
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,4 +56,10 @@ public class FavoriteCompanyService {
 
         return true;
     }
+    
+    @Transactional(readOnly = true)
+    public List<FavoriteCompanyResponseDto> getMyFavoriteCompanies(Long userId) {
+        return favoriteCompanyRepository.findFavoriteCompaniesByUserId(userId);
+    }
+
 }
