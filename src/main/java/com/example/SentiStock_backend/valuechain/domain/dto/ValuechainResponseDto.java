@@ -17,11 +17,7 @@ public class ValuechainResponseDto {
 
     private String relationship;
 
-    public static ValuechainResponseDto from(ValuechainEntity entity) {
-        return ValuechainResponseDto.builder()
-                .toCompanyId(entity.getToCompany().getId())
-                .toCompanyName(entity.getToCompany().getName())
-                .relationship(entity.getRelationship())
-                .build();
-    }
+    private Long currentPrice;
+    private Double changeRate;
+
 }
