@@ -13,19 +13,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Sectors") 
+@Table(name = "Sectors")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class SectorEntity {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private Long id;   
 
     @Column(name = "name", length = 10, nullable = false)
     private String name;
 }
+

@@ -11,6 +11,10 @@ import com.example.SentiStock_backend.auth.oauth.dto.KakaoTokenResponse;
 import com.example.SentiStock_backend.auth.oauth.dto.KakaoUserInfoResponse;
 import com.example.SentiStock_backend.auth.oauth.service.KakaoOAuthService;
 import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
+import com.example.SentiStock_backend.favorite.domain.entity.FavoriteSectorEntity;
+import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
+import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
+import com.example.SentiStock_backend.sector.repository.SectorRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,6 +35,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoOAuthService kakaoOAuthService;
+    private final SectorRepository sectorRepository;
+    private final FavoriteSectorRepository favoriteSectorRepository;
 
     // 회원가입
     @Transactional
@@ -42,6 +49,11 @@ public class AuthService {
         // 이메일 중복 체크
         if (userRepository.existsByUserEmail(request.getUserEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+
+        // 비밀번호 & 비밀번호 확인 일치 여부
+        if (!request.getPassword().equals(request.getPasswordConfirm())) {
+            throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
 
         // 비밀번호 암호화
@@ -60,7 +72,11 @@ public class AuthService {
                 .isSubscribe(false)
                 .build();
 
+        // 사용자 저장
         userRepository.save(user);
+
+        // 관심 섹터 저장 (필수)
+        saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
 
     // 점수 → 투자성향 매핑
@@ -77,6 +93,34 @@ public class AuthService {
             return "안정형";
         }
     }
+
+    // 관심 섹터 저장
+    private void saveFavoriteSectorsForUser(UserEntity user, List<Long> favoriteSectorIds) {
+
+        if (favoriteSectorIds == null || favoriteSectorIds.isEmpty()) {
+            throw new IllegalArgumentException("관심 섹터를 정확히 5개 선택해야 합니다.");
+        }
+
+        // 중복 제거 후 개수 체크
+        List<Long> distinctIds = favoriteSectorIds.stream()
+                .distinct()
+                .toList();
+
+        if (distinctIds.size() != 5) {
+            throw new IllegalArgumentException("관심 섹터는 중복 없이 정확히 5개 선택해야 합니다.");
+        }
+
+
+        distinctIds.forEach(sectorId -> {
+            SectorEntity sector = sectorRepository.findById(sectorId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("존재하지 않는 섹터입니다. id=" + sectorId));
+
+            FavoriteSectorEntity entity = FavoriteSectorEntity.of(user, sector);
+            favoriteSectorRepository.save(entity);
+        });
+    }
+
 
     // 로그인
     @Transactional
@@ -123,7 +167,6 @@ public class AuthService {
     @Transactional
     public LoginResponseDto kakaoLogin(String code) {
 
-  
         KakaoTokenResponse tokenResponse = kakaoOAuthService.getKakaoToken(code);
         KakaoUserInfoResponse userInfo =
                 kakaoOAuthService.getUserInfo(tokenResponse.getAccess_token());
@@ -140,11 +183,9 @@ public class AuthService {
         String provider = "KAKAO";
         String providerId = String.valueOf(kakaoId);
 
-
         UserEntity user = userRepository
                 .findByProviderAndProviderId(provider, providerId)
                 .orElseGet(() -> createKakaoUser(provider, providerId, email, nickname));
-
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
@@ -161,7 +202,6 @@ public class AuthService {
                 .build();
 
         refreshTokenRepository.save(tokenEntity);
-
 
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
@@ -187,7 +227,7 @@ public class AuthService {
         String randomPw = UUID.randomUUID().toString();
         String encodedPw = passwordEncoder.encode(randomPw);
 
-        // investorType 기본값 
+        // investorType 기본값
         String defaultInvestorType = "위험중립형";
 
         UserEntity user = UserEntity.builder()
