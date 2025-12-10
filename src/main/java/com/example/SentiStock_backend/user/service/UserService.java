@@ -1,6 +1,11 @@
 package com.example.SentiStock_backend.user.service;
 
+import com.example.SentiStock_backend.favorite.domain.entity.FavoriteSectorEntity;
+import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
+import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
+import com.example.SentiStock_backend.sector.repository.SectorRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
+import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.repository.UserRepository;
@@ -9,12 +14,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SectorRepository sectorRepository;
+    private final FavoriteSectorRepository favoriteSectorRepository;
 
     // 회원정보 조회
     @Transactional(readOnly = true)
@@ -28,23 +37,23 @@ public class UserService {
                 .userId(user.getUserId())
                 .nickname(user.getNickname())
                 .userEmail(user.getUserEmail())
-                .passwordMasked("********") 
+                .passwordMasked("********")
                 .build();
     }
 
-    // 회원정보 수정 
+    // 회원정보 수정
     @Transactional
     public UserMeResponseDto updateMyInfo(String userId, UserUpdateRequestDto dto) {
 
         UserEntity user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 닉네임 변경 
+        // 닉네임 변경
         if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
             user.changeNickname(dto.getNickname());
         }
 
-        // 비밀번호 변경 
+        // 비밀번호 변경
         String newPw = dto.getNewPassword();
         String confirmPw = dto.getConfirmNewPassword();
 
@@ -74,5 +83,53 @@ public class UserService {
                 .build();
     }
 
+    // 설문,섹터선택 미실시자 다시 완료 처리
+    @Transactional
+    public void completeOnboarding(Long userId, OnboardingRequestDto request) {
+        // 유저 조회
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        // 설문 점수 → 투자성향 타입으로 변경
+        String investorType = convertScoreToInvestorType(request.getInvestorScore());
+
+        user.setInvestorType(investorType);
+
+        // 관심 섹터 리스트 검증 + 중복 제거
+        List<Long> distinctIds = request.getFavoriteSectorIds().stream()
+                .distinct()
+                .toList();
+
+        if (distinctIds.size() != 5) {
+            throw new IllegalArgumentException("관심 섹터는 중복 없이 정확히 5개 선택해야 합니다.");
+        }
+
+        // 기존 관심 섹터 모두 삭제
+        favoriteSectorRepository.deleteAllByUserId(userId);
+
+        // 새 관심 섹터 5개 저장
+        distinctIds.forEach(sectorId -> {
+            SectorEntity sector = sectorRepository.findById(sectorId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("존재하지 않는 섹터입니다. id=" + sectorId));
+
+            FavoriteSectorEntity entity = FavoriteSectorEntity.of(user, sector);
+            favoriteSectorRepository.save(entity);
+        });
+    }
+
+    // 설문 점수 → 투자성향 매핑
+    private String convertScoreToInvestorType(int score) {
+        if (score >= 30) {
+            return "공격투자형";
+        } else if (score >= 25) {
+            return "적극투자형";
+        } else if (score >= 20) {
+            return "위험중립형";
+        } else if (score >= 15) {
+            return "안전추구형";
+        } else {
+            return "안정형";
+        }
+    }
 }

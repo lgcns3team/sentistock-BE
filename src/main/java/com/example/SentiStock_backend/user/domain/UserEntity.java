@@ -87,4 +87,9 @@ public class UserEntity {
     public boolean isSocialUser() {
         return "KAKAO".equalsIgnoreCase(provider);
     }
+
+    public void setInvestorType(String investorType) {
+        this.investorType = investorType;
+    }
+
 }
