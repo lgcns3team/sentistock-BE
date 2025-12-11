@@ -131,16 +131,16 @@ public class UserCtrl {
     //  회원 탈퇴
     @Operation(
     summary = "회원 탈퇴",
-    description = "로그인한 사용자의 계정을 삭제합니다. "
-                + "즐겨찾기, 구매내역, 리프레시 토큰 등 연관 데이터도 함께 삭제됩니다."
+    description = "로그인한 사용자의 계정을 삭제 "
+                + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제"
 )
-    @DeleteMapping("/me/delete")   // ⭐ 요청한 경로
+    @DeleteMapping("/me/delete")   
     public ResponseEntity<Void> deleteMyAccount(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        String userId = userDetails.getUserId();   // user_id (문자열)
+        String userId = userDetails.getUserId();  
         userService.deleteMyAccount(userId);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build(); 
     }
 
 }
