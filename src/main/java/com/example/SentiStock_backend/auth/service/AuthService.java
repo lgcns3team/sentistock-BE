@@ -79,8 +79,8 @@ public class AuthService {
         saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
 
-    // 점수 → 투자성향 매핑
-    private String convertScoreToInvestorType(int score) {
+    // 점수 → 투자성향 매핑 (UserService에서도 재사용할 수 있게 public으로 변경)
+    public String convertScoreToInvestorType(int score) {
         if (score >= 30) {
             return "공격투자형";
         } else if (score >= 25) {
@@ -94,8 +94,8 @@ public class AuthService {
         }
     }
 
-    // 관심 섹터 저장
-    private void saveFavoriteSectorsForUser(UserEntity user, List<Long> favoriteSectorIds) {
+    // 관심 섹터 저장 (UserService에서도 재사용할 수 있게 public으로 변경)
+    public void saveFavoriteSectorsForUser(UserEntity user, List<Long> favoriteSectorIds) {
 
         if (favoriteSectorIds == null || favoriteSectorIds.isEmpty()) {
             throw new IllegalArgumentException("관심 섹터를 정확히 5개 선택해야 합니다.");
