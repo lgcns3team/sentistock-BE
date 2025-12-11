@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,59 +44,93 @@ public class StockService {
             changeRate = diff * 100.0 / prevClose;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime hourStart = now.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime hourEnd = hourStart.plusHours(1);
+        List<StockEntity> hourBars = stockRepository
+            .findByCompany_IdAndDateBetweenOrderByDateAsc(
+                    companyId,
+                    hourStart,
+                    hourEnd
+            );
+
+        long hourVolume = hourBars.stream()
+            .mapToLong(StockEntity::getAcmlVol)
+            .sum();
+
         return StockChangeInfo.builder()
-                .currentPrice(current)
-                .changeRate(changeRate)
-                .build();
+            .currentPrice(current)
+            .changeRate(changeRate)
+            .volume(hourVolume)   
+            .build();
     }
 
-    public List<StockHeatmapItemDto> getSectorHeatmap(Long sectorId) {
+    private List<StockHeatmapItemDto> loadSectorStocks(Long sectorId) {
 
-        // 1) 섹터에 속한 종목들 찾기
         List<CompanyEntity> companies = companyRepository.findBySectorId(sectorId);
 
         List<StockHeatmapItemDto> result = new ArrayList<>();
 
-        // 2) 각 종목별로 최신 시세 한 건 조회
         for (CompanyEntity company : companies) {
 
             StockChangeInfo info = getLatestPriceAndChange(company.getId());
             if (info == null) {
-                continue; 
+                continue;
             }
 
-            // 3) DTO로 매핑해서 리스트에 추가
             result.add(
                     StockHeatmapItemDto.builder()
                             .companyId(company.getId())
                             .companyName(company.getName())
                             .currentPrice(info.getCurrentPrice())
                             .changeRate(info.getChangeRate())
+                            .volume(info.getVolume())
                             .build());
         }
 
         return result;
     }
 
+    public List<StockHeatmapItemDto> getSectorHeatmap(Long sectorId) {
+        return loadSectorStocks(sectorId).stream()
+                .sorted(Comparator.comparingLong(StockHeatmapItemDto::getVolume).reversed())
+                .limit(16)
+                .toList();
+    }
+
+    public List<StockHeatmapItemDto> getSectorRealtimeMonitor(Long sectorId) {
+        // 상승률 순
+        return loadSectorStocks(sectorId).stream()
+                .sorted(Comparator.comparingDouble(StockHeatmapItemDto::getChangeRate).reversed())
+                .limit(20)
+                .toList();
+    }
+
     public List<StockPriceDto> getHourlyCandles(String companyId) {
 
-        LocalDateTime startOfDay = LocalDate.now().atTime(9, 0);
-        // 오늘 날짜의 09:00:00 을 생성
+        LocalDateTime fromDate = LocalDate.now()
+                .minusDays(10)
+                .atTime(9, 0);
 
         List<StockEntity> entities = stockRepository
-                .findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(companyId, startOfDay);
-        // DB에서 companyId AND date >= 오늘 09:00:00 조건으로 데이터 조회
+                .findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(companyId, fromDate);
 
         Map<LocalDateTime, List<StockEntity>> grouped = entities.stream()
                 .collect(Collectors.groupingBy(
-                        e -> e.getDate()
-                                .truncatedTo(ChronoUnit.HOURS)));
-        // 날짜를 시 단위(ChronoUnit.HOURS)로 잘라서 그룹핑
+                        e -> e.getDate().truncatedTo(ChronoUnit.HOURS)));
 
-        return grouped.entrySet().stream()
+        List<StockPriceDto> candles = grouped.entrySet().stream()
+                .filter(entry -> {
+                    int hour = entry.getKey().getHour();
+                    return hour >= 9 && hour <= 16;
+                })
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
                     List<StockEntity> list = entry.getValue();
+                    long sum = list.stream()
+                            .mapToLong(StockEntity::getStckPrpr)
+                            .sum();
+                    int avgPrice = (int) (sum / list.size());
 
                     return StockPriceDto.builder()
                             .date(entry.getKey())
@@ -104,9 +139,16 @@ public class StockService {
                             .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
                             .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
                             .volume(list.stream().mapToLong(StockEntity::getAcmlVol).sum())
+                            .avgPrice(avgPrice)
                             .build();
                 })
                 .toList();
+
+        if (candles.size() > 28) {
+            return candles.subList(candles.size() - 28, candles.size());
+        }
+
+        return candles;
     }
 
 }

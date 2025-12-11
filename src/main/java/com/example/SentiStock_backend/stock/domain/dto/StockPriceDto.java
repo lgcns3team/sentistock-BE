@@ -31,4 +31,7 @@ public class StockPriceDto {
 
     @Schema(description = "거래량", example = "1000000")
     private Long volume;
+
+    @Schema(description = "이동평균선 데이터")
+    private int avgPrice;
 }

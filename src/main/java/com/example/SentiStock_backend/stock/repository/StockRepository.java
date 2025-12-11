@@ -16,4 +16,9 @@ public interface StockRepository extends JpaRepository<StockEntity, Long> {
     List<StockEntity> findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(
             String companyId,
             LocalDateTime date);
+
+    List<StockEntity> findByCompany_IdAndDateBetweenOrderByDateAsc(
+            String companyId,
+            LocalDateTime start,
+            LocalDateTime end);
 }

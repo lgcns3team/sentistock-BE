@@ -12,4 +12,6 @@ public class StockChangeInfo {
     private Long currentPrice;
 
     private Double changeRate;
+
+    private long volume;
 }

@@ -26,4 +26,7 @@ public class StockHeatmapItemDto {
 
     @Schema(description = "등락률(%)", example = "1.23")
     private Double changeRate;
+
+    @Schema(description = "거래량")
+    private long volume;
 }
