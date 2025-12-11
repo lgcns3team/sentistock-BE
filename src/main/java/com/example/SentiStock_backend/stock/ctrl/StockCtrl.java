@@ -25,7 +25,7 @@ public class StockCtrl {
     private StockService stockService;
 
     @GetMapping("/{sectorId}/heatmap")
-    @Operation(summary = "섹터 히트맵 조회", description = "섹터 ID에 해당하는 종목들의 히트맵 데이터를 조회합니다.")
+    @Operation(summary = "섹터 히트맵 조회", description = "섹터 ID에 해당하는 종목들의 히트맵 데이터를 거래량 순으로 조회합니다.")
     public ResponseEntity<List<StockHeatmapItemDto>> getSectorHeatmap(
             @Parameter(description = "섹터 ID", example = "1") @PathVariable Long sectorId) {
         return ResponseEntity.ok(
@@ -43,7 +43,7 @@ public class StockCtrl {
     @GetMapping("/{sectorId}/monitor")
     @Operation(summary = "실시간 섹터 종목 모니터링", description = "섹터별 종목 20개를 상승률 또는 하락률 기준 정렬하여 조회합니다.")
     public ResponseEntity<List<StockHeatmapItemDto>> getSectorRealtimeMonitor(
-            @PathVariable Long sectorId) {
+            @Parameter(description = "섹터 ID", example = "1") @PathVariable Long sectorId) {
         return ResponseEntity.ok(stockService.getSectorRealtimeMonitor(sectorId));
     }
 }
