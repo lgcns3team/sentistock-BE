@@ -64,7 +64,7 @@ public class StockService {
 
             StockChangeInfo info = getLatestPriceAndChange(company.getId());
             if (info == null) {
-                continue; 
+                continue;
             }
 
             // 3) DTO로 매핑해서 리스트에 추가
@@ -82,34 +82,42 @@ public class StockService {
 
     public List<StockPriceDto> getHourlyCandles(String companyId) {
 
-        LocalDateTime startOfDay = LocalDate.now().atTime(9, 0);
-        // 오늘 날짜의 09:00:00 을 생성
-
+        LocalDateTime fromDate = LocalDate.now()
+                .minusDays(10)
+                .atTime(9, 0);
         List<StockEntity> entities = stockRepository
-                .findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(companyId, startOfDay);
-        // DB에서 companyId AND date >= 오늘 09:00:00 조건으로 데이터 조회
+                .findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(companyId, fromDate);
 
         Map<LocalDateTime, List<StockEntity>> grouped = entities.stream()
                 .collect(Collectors.groupingBy(
-                        e -> e.getDate()
-                                .truncatedTo(ChronoUnit.HOURS)));
-        // 날짜를 시 단위(ChronoUnit.HOURS)로 잘라서 그룹핑
+                        e -> e.getDate().truncatedTo(ChronoUnit.HOURS)));
 
-        return grouped.entrySet().stream()
+        List<StockPriceDto> candles = grouped.entrySet().stream()
+                .filter(entry -> {
+                    int hour = entry.getKey().getHour();
+                    return hour >= 9 && hour <= 16; // 장 시간만
+                })
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
                     List<StockEntity> list = entry.getValue();
 
                     return StockPriceDto.builder()
-                            .date(entry.getKey())
-                            .open(list.get(0).getStckOprc())
-                            .close(list.get(list.size() - 1).getStckPrpr())
+                            .date(entry.getKey()) // 09:00, 10:00 이런 시간
+                            .open(list.get(0).getStckOprc()) // 첫 틱 시가
+                            .close(list.get(list.size() - 1).getStckPrpr()) // 마지막 틱 종가
                             .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
                             .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
                             .volume(list.stream().mapToLong(StockEntity::getAcmlVol).sum())
                             .build();
                 })
                 .toList();
+
+        // 최신 28개 시간봉만 (장 시간 기준)
+        if (candles.size() > 28) {
+            return candles.subList(candles.size() - 28, candles.size());
+        }
+
+        return candles;
     }
 
 }
