@@ -19,10 +19,14 @@ public interface FavoriteCompanyRepository
     List<FavoriteCompanyEntity> findAllByUserId(Long userId);
 
     @Query("""
-            select fc
-            from FavoriteCompanyEntity fc
-            join fetch fc.company c
-            where fc.user.id = :userId
-            """)
+        select fc
+        from FavoriteCompanyEntity fc
+        join fetch fc.company c
+        where fc.userId = :userId
+        """)
     List<FavoriteCompanyEntity> findFavoriteCompaniesByUserId(@Param("userId") Long userId);
+
+    int countByUserId(Long userId);
+    
+    void deleteAllByUserId(Long userId);
 }
