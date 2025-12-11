@@ -36,6 +36,8 @@ public class UserService {
                 .userEmail(user.getUserEmail())
                 .passwordMasked("********")
                 .provider(user.getProvider())  // 로컬/카카오 구분용
+                .subscribe(user.isSubscribe())
+                .investorType(user.getInvestorType())
                 .build();
     }
 
@@ -58,6 +60,8 @@ public class UserService {
                 .userEmail(user.getUserEmail())
                 .passwordMasked("********")
                 .provider(user.getProvider())
+                .subscribe(user.isSubscribe())
+                .investorType(user.getInvestorType())
                 .build();
     }
 

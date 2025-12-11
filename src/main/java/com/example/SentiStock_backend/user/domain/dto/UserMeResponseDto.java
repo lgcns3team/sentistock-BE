@@ -15,5 +15,7 @@ public class UserMeResponseDto {
     private String passwordMasked;
     // KAKAO / null(로컬) 구분
     private String provider;
+    private boolean subscribe;
+    private String investorType;
 }
     
