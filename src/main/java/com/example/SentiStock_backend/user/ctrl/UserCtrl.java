@@ -2,13 +2,15 @@ package com.example.SentiStock_backend.user.ctrl;
 
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
+import com.example.SentiStock_backend.favorite.domain.dto.FavoriteSectorResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
-import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDTO;
+import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.service.UserService;
 import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
 import com.example.SentiStock_backend.purchase.service.PurchaseService;
+import com.example.SentiStock_backend.favorite.service.FavoriteSectorService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +35,7 @@ public class UserCtrl {
     private final UserService userService;
     private final FavoriteCompanyService favoriteCompanyService;
     private final PurchaseService purchaseService;
+    private final FavoriteSectorService favoriteSectorService;
 
     @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 아이디, 닉네임, 이메일 등을 조회. ")
     @GetMapping("/me")
@@ -74,11 +78,19 @@ public class UserCtrl {
 
     @Operation(summary = "내 구매 종목 목록 조회", description = "로그인한 사용자가 구매한 종목(코드, 회사명)과 평단가(avgPrice)를 반환합니다.")
     @GetMapping("/me/purchases")
-    public List<UserPurchaseResponseDTO> getMyPurchaseCompanies(
+    public List<UserPurchaseResponseDto> getMyPurchaseCompanies(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId(); // = UserEntity.id(Long)
 
         return purchaseService.getMyPurchases(userId);
+    }
+
+    @Operation(summary = "내 관심 섹터 목록 조회", description = "로그인한 사용자가 관심있어하는 섹터 목록(섹터명)을 반환합니다.")
+    @GetMapping("/me/favorites/sectors")
+    public List<FavoriteSectorResponseDto> getMyFavoriteSectors(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getId();
+        return favoriteSectorService.getMyFavoriteSectors(userId);
     }
 
 }
