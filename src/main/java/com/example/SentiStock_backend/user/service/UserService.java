@@ -4,14 +4,13 @@ import com.example.SentiStock_backend.auth.service.AuthService;
 import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
+import com.example.SentiStock_backend.user.domain.dto.PasswordChangeRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
-import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +21,8 @@ public class UserService {
     private final FavoriteSectorRepository favoriteSectorRepository;
     private final AuthService authService;
 
-    // 회원정보 조회
+
+    //  내 정보 조회
     @Transactional(readOnly = true)
     public UserMeResponseDto getMyInfo(String userId) {
 
@@ -35,40 +35,22 @@ public class UserService {
                 .nickname(user.getNickname())
                 .userEmail(user.getUserEmail())
                 .passwordMasked("********")
+                .provider(user.getProvider())  // 로컬/카카오 구분용
+                .subscribe(user.isSubscribe())
+                .investorType(user.getInvestorType())
                 .build();
     }
 
-    // 회원정보 수정
+ 
+    //  닉네임 변경 (회원정보 수정 탭)
     @Transactional
-    public UserMeResponseDto updateMyInfo(String userId, UserUpdateRequestDto dto) {
+    public UserMeResponseDto updateMyNickname(String userId, String nickname) {
 
         UserEntity user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 닉네임 변경
-        if (dto.getNickname() != null && !dto.getNickname().isBlank()) {
-            user.changeNickname(dto.getNickname());
-        }
-
-        // 비밀번호 변경
-        String newPw = dto.getNewPassword();
-        String confirmPw = dto.getConfirmNewPassword();
-
-        // 둘 다 값이 있을 때만 비밀번호 변경 시도
-        if (newPw != null && !newPw.isBlank()) {
-
-            // 카카오 유저 차단
-            if (user.isSocialUser()) {
-                throw new IllegalStateException("카카오 회원은 비밀번호 변경이 불가합니다.");
-            }
-
-            // 비밀번호 확인 체크
-            if (confirmPw == null || !newPw.equals(confirmPw)) {
-                throw new IllegalArgumentException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
-            }
-
-            String encoded = passwordEncoder.encode(newPw);
-            user.changePassword(encoded);
+        if (nickname != null && !nickname.isBlank()) {
+            user.changeNickname(nickname);
         }
 
         return UserMeResponseDto.builder()
@@ -77,10 +59,47 @@ public class UserService {
                 .nickname(user.getNickname())
                 .userEmail(user.getUserEmail())
                 .passwordMasked("********")
+                .provider(user.getProvider())
+                .subscribe(user.isSubscribe())
+                .investorType(user.getInvestorType())
                 .build();
     }
 
-    // 설문, 섹터선택 미실시자 다시 완료 처리
+
+    //  비밀번호 변경 (계정 보안 탭, 로컬 유저만)
+    @Transactional
+    public void changePassword(String userId, PasswordChangeRequestDto dto) {
+
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 카카오 회원이면 비밀번호 변경 불가 (백엔드 방어 로직)
+        if (user.isSocialUser()) {
+            throw new IllegalStateException("카카오 회원은 비밀번호를 변경할 수 없습니다.");
+        }
+
+        // 현재 비밀번호 검증
+        if (user.getUserPw() == null ||
+            !passwordEncoder.matches(dto.getCurrentPassword(), user.getUserPw())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호 & 확인 일치 
+        if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        // 이전 비밀번호와 같은지 체크
+        if (passwordEncoder.matches(dto.getNewPassword(), user.getUserPw())) {
+            throw new IllegalArgumentException("이전 비밀번호와 다른 비밀번호를 사용해주세요.");
+        }
+
+        // 5) 암호화 후 저장
+        String encoded = passwordEncoder.encode(dto.getNewPassword());
+        user.changePassword(encoded);
+    }
+
+    //  설문, 섹터선택 미실시자 다시 완료 처리
     @Transactional
     public void completeOnboarding(Long userId, OnboardingRequestDto request) {
         // 유저 조회
@@ -94,6 +113,4 @@ public class UserService {
         // 관심 섹터 저장은 AuthService의 공통 메서드 재사용
         authService.saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
-
-
 }
