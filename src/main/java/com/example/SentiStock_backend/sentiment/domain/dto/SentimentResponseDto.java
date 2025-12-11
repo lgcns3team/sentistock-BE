@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SentimentResponseDTO {
+public class SentimentResponseDto {
 
     private Long id;
     private Long probPos;
@@ -19,8 +19,8 @@ public class SentimentResponseDTO {
     private String date;
     private Long newsId;
 
-    public static SentimentResponseDTO fromEntity(SentimentEntity entity) {
-        return SentimentResponseDTO.builder()
+    public static SentimentResponseDto fromEntity(SentimentEntity entity) {
+        return SentimentResponseDto.builder()
                 .id(entity.getId())
                 .probPos(entity.getProbPos())
                 .probNeg(entity.getProbNeg())

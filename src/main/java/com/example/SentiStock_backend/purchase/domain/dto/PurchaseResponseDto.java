@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class PurchaseResponseDTO {
+public class PurchaseResponseDto {
     private Long id;
     private String companyId;
     private Float avgPrice;

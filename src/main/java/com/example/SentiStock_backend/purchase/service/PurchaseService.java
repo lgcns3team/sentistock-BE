@@ -2,14 +2,14 @@ package com.example.SentiStock_backend.purchase.service;
 
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.company.repository.CompanyRepository;
-import com.example.SentiStock_backend.purchase.domain.dto.PurchaseRequestDTO;
-import com.example.SentiStock_backend.purchase.domain.dto.PurchaseResponseDTO;
+import com.example.SentiStock_backend.purchase.domain.dto.PurchaseRequestDto;
+import com.example.SentiStock_backend.purchase.domain.dto.PurchaseResponseDto;
 import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
 import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
 import com.example.SentiStock_backend.stock.domain.entity.StockEntity;
 import com.example.SentiStock_backend.stock.repository.StockRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
-import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDTO;
+import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +28,7 @@ public class PurchaseService {
         private final StockRepository stockRepository;
 
         @Transactional
-        public PurchaseResponseDTO savePurchase(PurchaseRequestDTO request) {
+        public PurchaseResponseDto savePurchase(PurchaseRequestDto request) {
 
                 UserEntity user = userRepository.findById(request.getUserId())
                                 .orElseThrow(() -> new RuntimeException("User Not Found"));
@@ -44,7 +44,7 @@ public class PurchaseService {
 
                 purchaseRepository.save(purchase);
 
-                return new PurchaseResponseDTO(
+                return new PurchaseResponseDto(
                                 purchase.getId(),
                                 request.getCompanyId(),
                                 request.getAvgPrice());
@@ -63,7 +63,7 @@ public class PurchaseService {
         // .toList();
         // }
 
-        public List<UserPurchaseResponseDTO> getMyPurchases(Long userId) {
+        public List<UserPurchaseResponseDto> getMyPurchases(Long userId) {
 
                 List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
 
@@ -89,7 +89,7 @@ public class PurchaseService {
                                 profitRate = Double.valueOf(String.format("%.2f", rate));
                         }
 
-                        return UserPurchaseResponseDTO.builder()
+                        return UserPurchaseResponseDto.builder()
                                         .companyId(companyId)
                                         .companyName(companyName)
                                         .avgPrice(avgPrice)

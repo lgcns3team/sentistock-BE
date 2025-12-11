@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class SentimentRatioResponseDTO {
+public class SentimentRatioResponseDto {
 
     private String companyId;
     private Long totalCount;

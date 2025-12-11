@@ -1,6 +1,6 @@
 package com.example.SentiStock_backend.news.service;
 
-import com.example.SentiStock_backend.news.domain.dto.NewsSentimentDTO;
+import com.example.SentiStock_backend.news.domain.dto.NewsSentimentDto;
 import com.example.SentiStock_backend.news.domain.entity.NewsEntity;
 import com.example.SentiStock_backend.news.repository.NewsRepository;
 import com.example.SentiStock_backend.sentiment.domain.entity.SentimentEntity;
@@ -18,7 +18,7 @@ public class NewsService {
     private final SentimentRepository sentimentRepository;
 
     /** 최신 뉴스 3개 + 감정 점수 반환 */
-    public List<NewsSentimentDTO> getRecentNewsWithSentiment(String companyId) {
+    public List<NewsSentimentDto> getRecentNewsWithSentiment(String companyId) {
 
         List<NewsEntity> newsList = newsRepository.findByCompanyIdOrderByDateDesc(companyId);
 
@@ -29,7 +29,7 @@ public class NewsService {
                             .findTopByNewsIdOrderByDateDesc(news.getId())
                             .orElse(null);
 
-                    return NewsSentimentDTO.builder()
+                    return NewsSentimentDto.builder()
                             .newsId(news.getId())
                             .title(news.getTitle())
                             .score(sentiment != null ? sentiment.getScore() : null)
