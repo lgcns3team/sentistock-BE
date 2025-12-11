@@ -1,15 +1,16 @@
 package com.example.SentiStock_backend.favorite.domain.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FavoriteSectorId {
-    private Long user;    
-    private Long sector; 
+@EqualsAndHashCode
+public class FavoriteSectorId implements Serializable {
+
+    private Long userId;
+    private Long sectorId;
 }

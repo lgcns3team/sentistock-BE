@@ -2,6 +2,7 @@ package com.example.SentiStock_backend.user.ctrl;
 
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
+import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.service.UserService;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -65,6 +67,19 @@ public class UserController {
     ) {
         Long userId = userDetails.getId();
         return favoriteCompanyService.getMyFavoriteCompanies(userId);
+    }
+
+    // 온보딩 완료 처리
+    @Operation(summary = "온보딩 완료 (설문 + 관심 섹터 등록)",
+               description = "카카오/로컬 사용자 모두 설문 점수와 관심섹터 5개를 저장하여 투자성향과 관심 섹터를 확정합니다."+
+               "카카오톡 회원가입 직후 Response Body에 onboardingRequired: true 일때 이 api를 호출하여 설문과 섹터지정을 하고 json형태로 보내기" )
+    @PatchMapping("/me/onboarding")
+    public ResponseEntity<Void> completeOnboarding(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody OnboardingRequestDto request
+    ) {
+        userService.completeOnboarding(userDetails.getId(), request);
+        return ResponseEntity.ok().build();
     }
 
 }
