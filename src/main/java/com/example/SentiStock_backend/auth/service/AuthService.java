@@ -322,4 +322,23 @@ public class AuthService {
         // 유저의 모든 RefreshToken 제거
         refreshTokenRepository.deleteByUser(user);
     }
+
+    // 카카오톡 연동 해제
+    public void unlinkSocialAccount(UserEntity user) {
+        // 소셜 회원이 아닐 경우 스킵
+        if (!user.isSocialUser()) {
+            return;
+        }
+
+        // provider 가 kakao 인 경우에만 언링크
+        if ("kakao".equalsIgnoreCase(user.getProvider())) {
+            String kakaoUserId = user.getProviderId(); 
+
+            if (kakaoUserId != null && !kakaoUserId.isBlank()) {
+                kakaoOAuthService.unlinkKakaoUser(kakaoUserId);
+            }
+        }
+    }
+
+
 }

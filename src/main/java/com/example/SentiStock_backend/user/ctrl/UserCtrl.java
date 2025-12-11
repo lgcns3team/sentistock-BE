@@ -132,8 +132,9 @@ public class UserCtrl {
     @Operation(
     summary = "회원 탈퇴",
     description = "로그인한 사용자의 계정을 삭제 "
-                + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제"
-)
+                + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제 "
+                + "카카오 회원은 서비스 연동 해제"
+    )
     @DeleteMapping("/me/delete")   
     public ResponseEntity<Void> deleteMyAccount(
             @AuthenticationPrincipal CustomUserDetails userDetails

@@ -23,6 +23,9 @@ public class KakaoOAuthService {
     @Value("${kakao.client-secret:}")
     private String clientSecret;
 
+    @Value("${kakao.admin-key}")
+    private String adminKey; 
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     
@@ -72,4 +75,35 @@ public class KakaoOAuthService {
         KakaoTokenResponse token = getKakaoToken(code);
         return getUserInfo(token.getAccess_token());
     }
+
+    //카카오 회원 탈퇴 
+    public void unlinkKakaoUser(String kakaoUserId) {
+        String url = "https://kapi.kakao.com/v1/user/unlink";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "KakaoAK " + adminKey);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("target_id_type", "user_id");
+        body.add("target_id", kakaoUserId);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(url, request, String.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new IllegalStateException(
+                        "Kakao unlink failed: status=" + response.getStatusCode()
+                );
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Kakao unlink error", e);
+        }
+    }
+
 }

@@ -120,15 +120,17 @@ public class UserService {
         authService.saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
 
-    //  회원탈퇴 (연관 데이터 + 토큰 + 유저 삭제)
+    // 회원탈퇴
     @Transactional
     public void deleteMyAccount(String userId) {
-
-        // user_id로 유저 조회
+        // 유저 조회
         UserEntity user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        Long userPk = user.getId(); 
+        Long userPk = user.getId();
+
+        // 카카오 연동 해제 
+        authService.unlinkSocialAccount(user);  
 
         // 즐겨찾기 섹터 삭제
         favoriteSectorRepository.deleteAllByUserId(userPk);
@@ -145,6 +147,7 @@ public class UserService {
         // 유저 삭제
         userRepository.delete(user);
     }
+
 
 
 }
