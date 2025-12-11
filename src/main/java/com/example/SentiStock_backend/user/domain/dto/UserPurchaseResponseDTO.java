@@ -15,4 +15,6 @@ public class UserPurchaseResponseDTO {
     private String companyId;   // 종목코드
     private String companyName; // 회사명
     private Float avgPrice;     // 평단가
+    private Long currentPrice;  // 현재가
+    private Double profitRate;  // 수익률 (%)
 }
