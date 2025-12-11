@@ -27,8 +27,8 @@ public class ValuechainController {
     @GetMapping("/{companyId}")
     @Operation(summary = "기업 밸류체인 조회", description = "특정 기업이 Value Chain 상에서 어떤 기업들과 연결되어 있는지 조회합니다")
     public ResponseEntity<List<ValuechainResponseDto>> getValuechainsByCompany(
-            @Parameter(description = "기업 ID (예: 005930, 000660)", example = "005930")
-            @PathVariable String companyId) {
+        @Parameter(description = "기업 ID (예: 005930, 000660)", example = "005930")    
+        @PathVariable String companyId) {
         List<ValuechainResponseDto> result = valuechainService.getValuechainsByFromCompanyId(companyId);
 
         return ResponseEntity.ok(result);
