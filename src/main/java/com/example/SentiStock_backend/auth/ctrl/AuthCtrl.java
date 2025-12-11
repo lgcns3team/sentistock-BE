@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthCtrl {
 
     private final AuthService authService;
     private final KakaoOAuthService kakaoOAuthService;
