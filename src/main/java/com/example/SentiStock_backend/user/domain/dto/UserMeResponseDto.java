@@ -14,3 +14,4 @@ public class UserMeResponseDto {
     // 비밀번호는 실제 값 대신 마스킹된 문자열만 전달
     private String passwordMasked;
 }
+    

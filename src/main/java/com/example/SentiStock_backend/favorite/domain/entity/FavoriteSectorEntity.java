@@ -2,25 +2,13 @@ package com.example.SentiStock_backend.favorite.domain.entity;
 
 import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
 import com.example.SentiStock_backend.user.domain.UserEntity;
+import jakarta.persistence.*;
+import lombok.*;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(name = "Favorites_sectors",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "sector_id"})
-)
+@Table(name = "Favorites_sectors")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,13 +16,29 @@ import lombok.Setter;
 @Builder
 @IdClass(FavoriteSectorId.class)
 public class FavoriteSectorEntity {
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sector_id", nullable = false)
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Id
+    @Column(name = "sector_id", nullable = false)
+    private Long sectorId;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserEntity user;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "sector_id", insertable = false, updatable = false)
     private SectorEntity sector;
+
+    public static FavoriteSectorEntity of(UserEntity user, SectorEntity sector) {
+        return FavoriteSectorEntity.builder()
+                .userId(user.getId())
+                .sectorId(sector.getId())
+                .user(user)
+                .sector(sector)
+                .build();
+    }
 }

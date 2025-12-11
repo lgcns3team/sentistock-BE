@@ -3,6 +3,8 @@ package com.example.SentiStock_backend.user.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(
     name = "users",
@@ -46,6 +48,10 @@ public class UserEntity {
     @Column(name = "is_subscribe", nullable = false)
     private boolean isSubscribe;
 
+    // 구독 시작일 (구독 안 했으면 null)
+    @Column(name = "subscribe_at")
+    private LocalDate subscribeAt;
+
     // 가입 타입: LOCAL / KAKAO / ...
     @Column(name = "provider", length = 20)
     private String provider;
@@ -76,15 +82,30 @@ public class UserEntity {
         this.providerId = providerId;
     }
 
-    //provider가 null이면 LOCAL 
+    public void startSubscription(LocalDate startDate) {
+        this.isSubscribe = true;
+        this.subscribeAt = startDate;
+    }
+
+    public void cancelSubscription() {
+        this.isSubscribe = false;
+        this.subscribeAt = null;
+    }
+
+    //provider가 null이면 LOCAL
     public boolean isLocalUser() {
         return provider == null
                 || provider.isBlank()
                 || "LOCAL".equalsIgnoreCase(provider);
     }
 
-    // 카카오인 경우 true 
+    // 카카오인 경우 true
     public boolean isSocialUser() {
         return "KAKAO".equalsIgnoreCase(provider);
     }
+
+    public void setInvestorType(String investorType) {
+        this.investorType = investorType;
+    }
+
 }

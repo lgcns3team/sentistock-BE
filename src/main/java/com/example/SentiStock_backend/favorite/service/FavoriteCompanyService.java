@@ -55,6 +55,16 @@ public class FavoriteCompanyService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저가 존재하지 않습니다."));
 
+
+        if (!user.isSubscribe()) {
+            int currentCount = favoriteCompanyRepository.countByUserId(userId);
+            if (currentCount >= 5) {
+                throw new IllegalStateException(
+                        "구독하지 않은 사용자는 즐겨찾기를 최대 5개까지 등록할 수 있습니다."
+                );
+            }
+        }
+
         CompanyEntity company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException("종목이 존재하지 않습니다."));
 

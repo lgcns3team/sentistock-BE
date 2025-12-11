@@ -11,6 +11,10 @@ import com.example.SentiStock_backend.auth.oauth.dto.KakaoTokenResponse;
 import com.example.SentiStock_backend.auth.oauth.dto.KakaoUserInfoResponse;
 import com.example.SentiStock_backend.auth.oauth.service.KakaoOAuthService;
 import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
+import com.example.SentiStock_backend.favorite.domain.entity.FavoriteSectorEntity;
+import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
+import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
+import com.example.SentiStock_backend.sector.repository.SectorRepository;
 import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,8 +35,10 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoOAuthService kakaoOAuthService;
+    private final SectorRepository sectorRepository;
+    private final FavoriteSectorRepository favoriteSectorRepository;
 
-    // 회원가입
+    // 회원가입 (로컬)
     @Transactional
     public void signup(SignUpRequestDto request) {
         // 아이디 중복 체크
@@ -42,6 +49,11 @@ public class AuthService {
         // 이메일 중복 체크
         if (userRepository.existsByUserEmail(request.getUserEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+
+        // 비밀번호 & 비밀번호 확인 일치 여부
+        if (!request.getPassword().equals(request.getPasswordConfirm())) {
+            throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
 
         // 비밀번호 암호화
@@ -60,11 +72,15 @@ public class AuthService {
                 .isSubscribe(false)
                 .build();
 
+        // 사용자 저장
         userRepository.save(user);
+
+        // 관심 섹터 저장 (필수)
+        saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
 
-    // 점수 → 투자성향 매핑
-    private String convertScoreToInvestorType(int score) {
+    // 점수 → 투자성향 매핑 (UserService에서도 재사용할 수 있게 public으로 변경)
+    public String convertScoreToInvestorType(int score) {
         if (score >= 30) {
             return "공격투자형";
         } else if (score >= 25) {
@@ -76,6 +92,32 @@ public class AuthService {
         } else {
             return "안정형";
         }
+    }
+
+    // 관심 섹터 저장 (UserService에서도 재사용할 수 있게 public으로 변경)
+    public void saveFavoriteSectorsForUser(UserEntity user, List<Long> favoriteSectorIds) {
+
+        if (favoriteSectorIds == null || favoriteSectorIds.isEmpty()) {
+            throw new IllegalArgumentException("관심 섹터를 정확히 5개 선택해야 합니다.");
+        }
+
+        // 중복 제거 후 개수 체크
+        List<Long> distinctIds = favoriteSectorIds.stream()
+                .distinct()
+                .toList();
+
+        if (distinctIds.size() != 5) {
+            throw new IllegalArgumentException("관심 섹터는 중복 없이 정확히 5개 선택해야 합니다.");
+        }
+
+        distinctIds.forEach(sectorId -> {
+            SectorEntity sector = sectorRepository.findById(sectorId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("존재하지 않는 섹터입니다. id=" + sectorId));
+
+            FavoriteSectorEntity entity = FavoriteSectorEntity.of(user, sector);
+            favoriteSectorRepository.save(entity);
+        });
     }
 
     // 로그인
@@ -107,6 +149,11 @@ public class AuthService {
 
         refreshTokenRepository.save(tokenEntity);
 
+        // 온보딩 필요 여부 계산
+        boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
+        boolean onboardingRequired =
+                "없음".equals(user.getInvestorType()) || !hasFavoriteSectors;
+
         // 응답 DTO
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
@@ -116,14 +163,15 @@ public class AuthService {
                 .nickname(user.getNickname())
                 .investorType(user.getInvestorType())
                 .subscribe(user.isSubscribe())
+                // 응답에 온보딩 플래그 포함
+                .onboardingRequired(onboardingRequired)
                 .build();
     }
 
-    //카카오 OAuth 로그인
+    // 카카오 OAuth 로그인
     @Transactional
     public LoginResponseDto kakaoLogin(String code) {
 
-  
         KakaoTokenResponse tokenResponse = kakaoOAuthService.getKakaoToken(code);
         KakaoUserInfoResponse userInfo =
                 kakaoOAuthService.getUserInfo(tokenResponse.getAccess_token());
@@ -140,11 +188,9 @@ public class AuthService {
         String provider = "KAKAO";
         String providerId = String.valueOf(kakaoId);
 
-
         UserEntity user = userRepository
                 .findByProviderAndProviderId(provider, providerId)
                 .orElseGet(() -> createKakaoUser(provider, providerId, email, nickname));
-
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
@@ -162,6 +208,10 @@ public class AuthService {
 
         refreshTokenRepository.save(tokenEntity);
 
+        // 카카오 로그인도 온보딩 여부 계산
+        boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
+        boolean onboardingRequired =
+                "없음".equals(user.getInvestorType()) || !hasFavoriteSectors;
 
         return LoginResponseDto.builder()
                 .accessToken(accessToken)
@@ -171,24 +221,26 @@ public class AuthService {
                 .nickname(user.getNickname())
                 .investorType(user.getInvestorType())
                 .subscribe(user.isSubscribe())
+                // 응답에 온보딩 플래그 포함
+                .onboardingRequired(onboardingRequired)
                 .build();
     }
 
-    //최초 카카오 로그인 시 UserEntity 생성
+    // 최초 카카오 로그인 시 UserEntity 생성
     private UserEntity createKakaoUser(String provider,
                                        String providerId,
                                        String email,
                                        String nickname) {
 
-        //user_id는 고유하게 "kakao_{카카오ID}" 형식으로 생성
+        // user_id는 고유하게 "kakao_{카카오ID}" 형식으로 생성
         String userId = "kakao_" + providerId;
 
-        //user_pw를 채우기 위한 랜덤 비밀번호
+        // user_pw를 채우기 위한 랜덤 비밀번호
         String randomPw = UUID.randomUUID().toString();
         String encodedPw = passwordEncoder.encode(randomPw);
 
-        // investorType 기본값 
-        String defaultInvestorType = "위험중립형";
+        // 카카오 기본 투자성향을 "없음"으로 설정
+        String defaultInvestorType = "없음";
 
         UserEntity user = UserEntity.builder()
                 .nickname(nickname != null ? nickname : "카카오유저_" + providerId)
