@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StocksScoreResponseDTO {
+public class StocksScoreResponseDto {
 
     private LocalDateTime date;
     private Double score;
 
-    public static StocksScoreResponseDTO fromEntity(StocksScoreEntity entity) {
-        return StocksScoreResponseDTO.builder()
+    public static StocksScoreResponseDto fromEntity(StocksScoreEntity entity) {
+        return StocksScoreResponseDto.builder()
                 .date(entity.getDate())
                 .score(entity.getScore())
                 .build();

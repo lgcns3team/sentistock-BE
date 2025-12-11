@@ -4,9 +4,9 @@ import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.news.domain.entity.NewsEntity;
 import com.example.SentiStock_backend.news.repository.NewsRepository;
-import com.example.SentiStock_backend.sentiment.domain.dto.SentimentRatioResponseDTO;
-import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDTO;
-import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDTO;
+import com.example.SentiStock_backend.sentiment.domain.dto.SentimentRatioResponseDto;
+import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDto;
+import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDto;
 import com.example.SentiStock_backend.sentiment.domain.entity.SentimentEntity;
 import com.example.SentiStock_backend.sentiment.domain.entity.StocksScoreEntity;
 import com.example.SentiStock_backend.sentiment.repository.SentimentRepository;
@@ -57,7 +57,7 @@ public class SentimentService {
         /**
          * 최근 기사 감정 점수 3개 조회
          */
-        public List<SentimentResponseDTO> getRecent3Sentiments(String companyId) {
+        public List<SentimentResponseDto> getRecent3Sentiments(String companyId) {
 
                 List<NewsEntity> newsList = newsRepository.findByCompanyId(companyId);
                 if (newsList.isEmpty())
@@ -70,20 +70,20 @@ public class SentimentService {
                 return sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds)
                                 .stream()
                                 .limit(3)
-                                .map(SentimentResponseDTO::fromEntity)
+                                .map(SentimentResponseDto::fromEntity)
                                 .toList();
         }
 
         /**
          * 종목 감정 히스토리 조회 (최근 7개 ASC 정렬)
          */
-        public List<StocksScoreResponseDTO> getSentimentHistory(String companyId) {
+        public List<StocksScoreResponseDto> getSentimentHistory(String companyId) {
 
                 List<StocksScoreEntity> list = stocksScoreRepository.findTop7ByCompanyIdOrderByDateDesc(companyId);
 
                 return list.stream()
                                 .sorted((a, b) -> a.getDate().compareTo(b.getDate())) // ASC 정렬
-                                .map(StocksScoreResponseDTO::fromEntity)
+                                .map(StocksScoreResponseDto::fromEntity)
                                 .toList();
         }
 
@@ -116,12 +116,12 @@ public class SentimentService {
         /**
          * 종목별 감정 비율 조회
          */
-        public SentimentRatioResponseDTO getSentimentRatio(String companyId) {
+        public SentimentRatioResponseDto getSentimentRatio(String companyId) {
 
                 List<Object[]> resultList = sentimentRepository.getSentimentCountByCompany(companyId);
 
                 if (resultList == null || resultList.isEmpty()) {
-                        return new SentimentRatioResponseDTO(companyId, 0L, 0, 0, 0);
+                        return new SentimentRatioResponseDto(companyId, 0L, 0, 0, 0);
                 }
 
                 Object[] result = resultList.get(0);
@@ -133,7 +133,7 @@ public class SentimentService {
                 
                 if (totalCount == 0) {
                         log.warn("⚠ totalCount is zero for companyId={}", companyId);
-                        return new SentimentRatioResponseDTO(companyId, 0L, 0, 0, 0);
+                        return new SentimentRatioResponseDto(companyId, 0L, 0, 0, 0);
                 }
 
                 double posRatio = (posCount * 100.0) / totalCount;
@@ -145,7 +145,7 @@ public class SentimentService {
                 int neuInt = (int) Math.round(neuRatio);
 
 
-                return new SentimentRatioResponseDTO(
+                return new SentimentRatioResponseDto(
                                 companyId,
                                 totalCount,
                                 posInt,

@@ -5,7 +5,7 @@ import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyRespons
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteSectorResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
-import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDTO;
+import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserUpdateRequestDto;
 import com.example.SentiStock_backend.user.service.UserService;
 import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
@@ -78,7 +78,7 @@ public class UserCtrl {
 
     @Operation(summary = "내 구매 종목 목록 조회", description = "로그인한 사용자가 구매한 종목(코드, 회사명)과 평단가(avgPrice)를 반환합니다.")
     @GetMapping("/me/purchases")
-    public List<UserPurchaseResponseDTO> getMyPurchaseCompanies(
+    public List<UserPurchaseResponseDto> getMyPurchaseCompanies(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId(); // = UserEntity.id(Long)
 

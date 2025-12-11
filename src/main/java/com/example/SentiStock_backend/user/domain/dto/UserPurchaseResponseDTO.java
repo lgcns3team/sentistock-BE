@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserPurchaseResponseDTO {
+public class UserPurchaseResponseDto {
     private String companyId;   // 종목코드
     private String companyName; // 회사명
     private Float avgPrice;     // 평단가

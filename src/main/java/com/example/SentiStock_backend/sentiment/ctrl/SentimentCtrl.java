@@ -1,8 +1,8 @@
 package com.example.SentiStock_backend.sentiment.ctrl;
 
-import com.example.SentiStock_backend.sentiment.domain.dto.SentimentRatioResponseDTO;
-import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDTO;
-import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDTO;
+import com.example.SentiStock_backend.sentiment.domain.dto.SentimentRatioResponseDto;
+import com.example.SentiStock_backend.sentiment.domain.dto.SentimentResponseDto;
+import com.example.SentiStock_backend.sentiment.domain.dto.StocksScoreResponseDto;
 import com.example.SentiStock_backend.sentiment.service.SentimentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +35,7 @@ public class SentimentCtrl {
     /** 기사 최신 감정 점수 3개 조회 */
     @Operation(summary = "최신 뉴스 감정 점수 3개 조회", description = "지정된 회사 종목에 대한 최신 뉴스 3건의 감정 점수를 조회합니다.")
     @GetMapping("/recent/{companyId}")
-    public List<SentimentResponseDTO> getRecentSentiments(
+    public List<SentimentResponseDto> getRecentSentiments(
             @Parameter(description = "회사 종목 코드", example = "005930") @PathVariable String companyId) {
         return sentimentService.getRecent3Sentiments(companyId);
     }
@@ -43,7 +43,7 @@ public class SentimentCtrl {
     /** 종목 감정 점수 7개 조회 (히스토리) */
     @Operation(summary = "종목 감정 점수 히스토리 조회 (최근 7개)", description = "지정된 회사 종목에 대한 최근 7개의 감정 점수 히스토리를 조회합니다.")
     @GetMapping("/history/{companyId}")
-    public List<StocksScoreResponseDTO> getSentimentHistory(
+    public List<StocksScoreResponseDto> getSentimentHistory(
             @Parameter(description = "회사 종목 코드", example = "005930") @PathVariable String companyId) {
         return sentimentService.getSentimentHistory(companyId);
     }
@@ -58,7 +58,7 @@ public class SentimentCtrl {
     /** 종목 감정 비율 조회 */
     @Operation(summary = "종목 감정 비율 조회", description = "지정된 회사 종목의 긍정, 부정, 중립 감정 비율을 조회합니다.")
     @GetMapping("/ratio/{companyId}")
-    public ResponseEntity<SentimentRatioResponseDTO> getSentimentRatio(
+    public ResponseEntity<SentimentRatioResponseDto> getSentimentRatio(
             @Parameter(description = "회사 종목 코드", example = "005930") @PathVariable String companyId) {
         return ResponseEntity.ok(sentimentService.getSentimentRatio(companyId));
     }
