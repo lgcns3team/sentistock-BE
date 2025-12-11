@@ -2,9 +2,9 @@ package com.example.SentiStock_backend.stock.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,20 +46,33 @@ public class StockService {
             changeRate = diff * 100.0 / prevClose;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime hourStart = now.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime hourEnd = hourStart.plusHours(1);
+        List<StockEntity> hourBars = stockRepository
+            .findByCompany_IdAndDateBetweenOrderByDateAsc(
+                    companyId,
+                    hourStart,
+                    hourEnd
+            );
+
+        long hourVolume = hourBars.stream()
+            .mapToLong(StockEntity::getAcmlVol)
+            .sum();
+
         return StockChangeInfo.builder()
-                .currentPrice(current)
-                .changeRate(changeRate)
-                .build();
+            .currentPrice(current)
+            .changeRate(changeRate)
+            .volume(hourVolume)   
+            .build();
     }
 
-    public List<StockHeatmapItemDto> getSectorHeatmap(Long sectorId) {
+    private List<StockHeatmapItemDto> loadSectorStocks(Long sectorId) {
 
-        // 1) 섹터에 속한 종목들 찾기
         List<CompanyEntity> companies = companyRepository.findBySectorId(sectorId);
 
         List<StockHeatmapItemDto> result = new ArrayList<>();
 
-        // 2) 각 종목별로 최신 시세 한 건 조회
         for (CompanyEntity company : companies) {
 
             StockChangeInfo info = getLatestPriceAndChange(company.getId());
@@ -67,17 +80,32 @@ public class StockService {
                 continue;
             }
 
-            // 3) DTO로 매핑해서 리스트에 추가
             result.add(
                     StockHeatmapItemDto.builder()
                             .companyId(company.getId())
                             .companyName(company.getName())
                             .currentPrice(info.getCurrentPrice())
                             .changeRate(info.getChangeRate())
+                            .volume(info.getVolume())
                             .build());
         }
 
         return result;
+    }
+
+    public List<StockHeatmapItemDto> getSectorHeatmap(Long sectorId) {
+        return loadSectorStocks(sectorId).stream()
+                .sorted(Comparator.comparingLong(StockHeatmapItemDto::getVolume).reversed())
+                .limit(16)
+                .toList();
+    }
+
+    public List<StockHeatmapItemDto> getSectorRealtimeMonitor(Long sectorId) {
+        // 상승률 순
+        return loadSectorStocks(sectorId).stream()
+                .sorted(Comparator.comparingDouble(StockHeatmapItemDto::getChangeRate).reversed())
+                .limit(20)
+                .toList();
     }
 
     public List<StockPriceDto> getHourlyCandles(String companyId) {
@@ -85,6 +113,7 @@ public class StockService {
         LocalDateTime fromDate = LocalDate.now()
                 .minusDays(10)
                 .atTime(9, 0);
+
         List<StockEntity> entities = stockRepository
                 .findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(companyId, fromDate);
 
