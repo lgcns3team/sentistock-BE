@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-public class UserController {
+public class UserCtrl {
 
     private final UserService userService;
     private final FavoriteCompanyService favoriteCompanyService;

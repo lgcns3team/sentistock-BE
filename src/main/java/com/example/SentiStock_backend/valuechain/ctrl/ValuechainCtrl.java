@@ -14,7 +14,7 @@ import com.example.SentiStock_backend.valuechain.service.ValuechainService;
 
 @RestController
 @RequestMapping("/api/v1/valuechains")
-public class ValuechainController {
+public class ValuechainCtrl {
 
     @Autowired
     private ValuechainService valuechainService;
