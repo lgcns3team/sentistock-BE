@@ -95,24 +95,28 @@ public class StockService {
         List<StockPriceDto> candles = grouped.entrySet().stream()
                 .filter(entry -> {
                     int hour = entry.getKey().getHour();
-                    return hour >= 9 && hour <= 16; // 장 시간만
+                    return hour >= 9 && hour <= 16;
                 })
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
                     List<StockEntity> list = entry.getValue();
+                    long sum = list.stream()
+                            .mapToLong(StockEntity::getStckPrpr)
+                            .sum();
+                    int avgPrice = (int) (sum / list.size());
 
                     return StockPriceDto.builder()
-                            .date(entry.getKey()) // 09:00, 10:00 이런 시간
-                            .open(list.get(0).getStckOprc()) // 첫 틱 시가
-                            .close(list.get(list.size() - 1).getStckPrpr()) // 마지막 틱 종가
+                            .date(entry.getKey())
+                            .open(list.get(0).getStckOprc())
+                            .close(list.get(list.size() - 1).getStckPrpr())
                             .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
                             .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
                             .volume(list.stream().mapToLong(StockEntity::getAcmlVol).sum())
+                            .avgPrice(avgPrice)
                             .build();
                 })
                 .toList();
 
-        // 최신 28개 시간봉만 (장 시간 기준)
         if (candles.size() > 28) {
             return candles.subList(candles.size() - 28, candles.size());
         }
