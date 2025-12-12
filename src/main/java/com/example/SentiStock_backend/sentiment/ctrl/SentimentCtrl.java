@@ -7,6 +7,7 @@ import com.example.SentiStock_backend.sentiment.service.SentimentService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/sentiment")
+@Tag(name = "Sentiment API", description = "종목 감정 점수 조회 및 관리 관련 API")
 public class SentimentCtrl {
 
     private final SentimentService sentimentService;
