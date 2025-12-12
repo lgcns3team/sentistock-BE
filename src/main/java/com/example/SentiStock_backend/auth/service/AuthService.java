@@ -11,6 +11,7 @@ import com.example.SentiStock_backend.auth.oauth.dto.KakaoTokenResponse;
 import com.example.SentiStock_backend.auth.oauth.dto.KakaoUserInfoResponse;
 import com.example.SentiStock_backend.auth.oauth.service.KakaoOAuthService;
 import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
+import com.example.SentiStock_backend.auth.util.TokenHashUtil;
 import com.example.SentiStock_backend.favorite.domain.entity.FavoriteSectorEntity;
 import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
 import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
@@ -136,18 +137,26 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
 
-        refreshTokenRepository.deleteByUser(user);
+        // RefreshToken 원문 대신 SHA-256 해시를 저장
+        String refreshTokenHash = TokenHashUtil.sha256Base64(refreshToken);
 
-        RefreshToken tokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(refreshToken)
-                .expiresAt(
-                        Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
-                )
-                .revoked(false)
-                .build();
+        RefreshToken tokenEntity = refreshTokenRepository.findByUser(user)
+                .orElseGet(() -> RefreshToken.builder()
+                        .user(user)
+                        .tokenHash(refreshTokenHash)
+                        .expiresAt(Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs()))
+                        .revoked(false)
+                        .build()
+                );
+
+        // 이미 있던 토큰이면 UPDATE
+        tokenEntity.rotate(
+                refreshTokenHash,
+                Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
+        );
 
         refreshTokenRepository.save(tokenEntity);
+
 
         // 온보딩 필요 여부 계산
         boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
@@ -195,18 +204,26 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
 
-        refreshTokenRepository.deleteByUser(user);
+        // RefreshToken 원문 대신 SHA-256 해시를 저장
+        String refreshTokenHash = TokenHashUtil.sha256Base64(refreshToken);
 
-        RefreshToken tokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(refreshToken)
-                .expiresAt(
-                        Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
-                )
-                .revoked(false)
-                .build();
+        RefreshToken tokenEntity = refreshTokenRepository.findByUser(user)
+                .orElseGet(() -> RefreshToken.builder()
+                        .user(user)
+                        .tokenHash(refreshTokenHash)
+                        .expiresAt(Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs()))
+                        .revoked(false)
+                        .build()
+                );
+
+        // 이미 있던 토큰이면 UPDATE
+        tokenEntity.rotate(
+                refreshTokenHash,
+                Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
+        );
 
         refreshTokenRepository.save(tokenEntity);
+
 
         // 카카오 로그인도 온보딩 여부 계산
         boolean hasFavoriteSectors = favoriteSectorRepository.existsByUserId(user.getId());
@@ -261,51 +278,48 @@ public class AuthService {
     public TokenResponseDto reissue(TokenReissueRequestDto request) {
         String refreshToken = request.getRefreshToken();
 
-        // Refresh Token 유효성 검사
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token 입니다.");
+            throw new IllegalArgumentException("유효하지 않은 Refresh Token");
         }
-        // 토큰이 Refresh Token인지 확인
+
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-            throw new IllegalArgumentException("Refresh Token이 아닙니다.");
+            throw new IllegalArgumentException("Refresh Token이 아님");
         }
-        // DB에서 RefreshToken 엔티티 조회
-        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("저장된 Refresh Token이 없습니다. 다시 로그인해주세요."));
 
-        // 이미 만료되었거나 사용 중지된 토큰인지 확인
-        if (storedToken.isRevoked() || storedToken.isExpired()) {
+        // 토큰에서 userId 추출
+        String userId = jwtTokenProvider.getUserId(refreshToken);
+
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
+
+        RefreshToken storedToken = refreshTokenRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("다시 로그인 필요"));
+
+        if (storedToken.isExpired()) {
             refreshTokenRepository.delete(storedToken);
-            throw new IllegalArgumentException("만료되었거나 사용 중지된 Refresh Token 입니다. 다시 로그인해주세요.");
+            throw new IllegalArgumentException("Refresh Token 만료");
         }
-        // 토큰에서 userId 추출, 유저 일치 여부 확인
-        String userIdFromToken = jwtTokenProvider.getUserId(refreshToken);
-        UserEntity user = storedToken.getUser();
 
-        if (!user.getUserId().equals(userIdFromToken)) {
-            throw new IllegalArgumentException("토큰 정보와 사용자 정보가 일치하지 않습니다.");
+        // SHA-256 해시로 RefreshToken 일치 여부 검증
+        String incomingHash = TokenHashUtil.sha256Base64(refreshToken);
+        if (!incomingHash.equals(storedToken.getTokenHash())) {
+            throw new IllegalArgumentException("Refresh Token 불일치");
         }
 
         // 새 토큰 발급
-        String newAccessToken = jwtTokenProvider.createAccessToken(userIdFromToken);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(userIdFromToken);
+        String newAccessToken = jwtTokenProvider.createAccessToken(userId);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(userId);
 
-        // 기존 RefreshToken 엔티티는 revoke
-        storedToken.revoke();
+        // 새 RefreshToken도 SHA-256 해시로 저장
+        String newRefreshTokenHash = TokenHashUtil.sha256Base64(newRefreshToken);
 
-        // 새 RefreshToken 엔티티 저장
-        RefreshToken newTokenEntity = RefreshToken.builder()
-                .user(user)
-                .token(newRefreshToken)
-                .expiresAt(
-                        Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
-                )
-                .revoked(false)
-                .build();
+        storedToken.rotate(
+                newRefreshTokenHash,
+                Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenValidityInMs())
+        );
 
-        refreshTokenRepository.save(newTokenEntity);
+        refreshTokenRepository.save(storedToken);
 
-        // 응답 DTO 리턴
         return TokenResponseDto.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
@@ -332,13 +346,11 @@ public class AuthService {
 
         // provider 가 kakao 인 경우에만 언링크
         if ("kakao".equalsIgnoreCase(user.getProvider())) {
-            String kakaoUserId = user.getProviderId(); 
+            String kakaoUserId = user.getProviderId();
 
             if (kakaoUserId != null && !kakaoUserId.isBlank()) {
                 kakaoOAuthService.unlinkKakaoUser(kakaoUserId);
             }
         }
     }
-
-
 }
