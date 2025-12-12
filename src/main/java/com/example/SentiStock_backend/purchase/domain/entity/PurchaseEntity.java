@@ -1,7 +1,7 @@
 package com.example.SentiStock_backend.purchase.domain.entity;
 
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
-import com.example.SentiStock_backend.user.domain.UserEntity;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

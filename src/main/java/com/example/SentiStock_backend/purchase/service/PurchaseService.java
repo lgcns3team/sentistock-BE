@@ -8,8 +8,8 @@ import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
 import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
 import com.example.SentiStock_backend.stock.domain.entity.StockEntity;
 import com.example.SentiStock_backend.stock.repository.StockRepository;
-import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 

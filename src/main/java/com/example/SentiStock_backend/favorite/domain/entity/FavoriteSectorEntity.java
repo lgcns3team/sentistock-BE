@@ -1,7 +1,8 @@
 package com.example.SentiStock_backend.favorite.domain.entity;
 
 import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
-import com.example.SentiStock_backend.user.domain.UserEntity;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 

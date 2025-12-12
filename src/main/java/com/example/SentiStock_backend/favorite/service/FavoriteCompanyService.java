@@ -9,7 +9,7 @@ import com.example.SentiStock_backend.sentiment.service.SentimentService;
 import com.example.SentiStock_backend.stock.domain.dto.StockChangeInfo;
 import com.example.SentiStock_backend.stock.domain.dto.StockPriceDto;
 import com.example.SentiStock_backend.stock.service.StockService;
-import com.example.SentiStock_backend.user.domain.UserEntity;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 
 import java.util.List;

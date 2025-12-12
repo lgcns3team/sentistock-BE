@@ -2,10 +2,10 @@ package com.example.SentiStock_backend.user.service;
 
 import com.example.SentiStock_backend.auth.service.AuthService;
 import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
-import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.PasswordChangeRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

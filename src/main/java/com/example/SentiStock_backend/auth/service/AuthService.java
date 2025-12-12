@@ -15,7 +15,7 @@ import com.example.SentiStock_backend.favorite.domain.entity.FavoriteSectorEntit
 import com.example.SentiStock_backend.favorite.repository.FavoriteSectorRepository;
 import com.example.SentiStock_backend.sector.domain.entity.SectorEntity;
 import com.example.SentiStock_backend.sector.repository.SectorRepository;
-import com.example.SentiStock_backend.user.domain.UserEntity;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
