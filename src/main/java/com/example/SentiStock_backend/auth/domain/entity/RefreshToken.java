@@ -11,8 +11,7 @@ import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 @Table(
     name = "refresh_tokens",
     indexes = {
-        @Index(name = "idx_refresh_token_user", columnList = "user_id"),
-        @Index(name = "uk_refresh_token_token", columnList = "token", unique = true)
+        @Index(name = "idx_refresh_token_user", columnList = "user_id")
     }
 )
 @Getter
@@ -25,28 +24,31 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 누구의 토큰
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    // 유저당 1개
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
 
-    // 실제 Refresh Token 문자열 
-    @Column(name = "token", nullable = false, length = 500)
-    private String token;
+    // 해시값만 저장
+    @Column(name = "token_hash", nullable = false, length = 100)
+    private String tokenHash;
 
-    // 만료 시각
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    // 토큰 무효화 여부(로그아웃,재발급)
     @Column(name = "revoked", nullable = false)
     private boolean revoked;
+
 
     public boolean isExpired() {
         return Instant.now().isAfter(this.expiresAt);
     }
 
-    public void revoke() {
-        this.revoked = true;
+    public void rotate(String tokenHash, Instant expiresAt) {
+        this.tokenHash = tokenHash;
+        this.expiresAt = expiresAt;
+        this.revoked = false;
     }
+
 }
+
