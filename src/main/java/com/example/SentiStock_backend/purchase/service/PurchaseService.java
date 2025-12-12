@@ -23,14 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class PurchaseService {
 
         private final PurchaseRepository purchaseRepository;
-        private final UserRepository userRepository;
         private final CompanyRepository companyRepository;
         private final StockRepository stockRepository;
+        private final UserRepository userRepository;
 
         @Transactional
-        public PurchaseResponseDto savePurchase(PurchaseRequestDto request) {
+        public PurchaseResponseDto savePurchase(Long userId,PurchaseRequestDto request) {
 
-                UserEntity user = userRepository.findById(request.getUserId())
+                UserEntity user = userRepository.findById(userId)
                                 .orElseThrow(() -> new RuntimeException("User Not Found"));
 
                 CompanyEntity company = companyRepository.findById(request.getCompanyId())
@@ -45,23 +45,9 @@ public class PurchaseService {
                 purchaseRepository.save(purchase);
 
                 return new PurchaseResponseDto(
-                                purchase.getId(),
                                 request.getCompanyId(),
                                 request.getAvgPrice());
         }
-
-        // public List<UserPurchaseResponseDTO> getMyPurchases(Long userId) {
-
-        // List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
-
-        // return purchases.stream()
-        // .map(p -> UserPurchaseResponseDTO.builder()
-        // .companyId(p.getCompany().getId()) // PK = company_id
-        // .companyName(p.getCompany().getName()) // 회사명
-        // .avgPrice(p.getAvgPrice())
-        // .build())
-        // .toList();
-        // }
 
         public List<UserPurchaseResponseDto> getMyPurchases(Long userId) {
 

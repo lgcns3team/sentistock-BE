@@ -1,6 +1,5 @@
 package com.example.SentiStock_backend.favorite.repository;
 
-import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyResponseDto;
 import com.example.SentiStock_backend.favorite.domain.entity.FavoriteCompanyEntity;
 import com.example.SentiStock_backend.favorite.domain.entity.FavoriteCompanyId;
 import java.util.List;
