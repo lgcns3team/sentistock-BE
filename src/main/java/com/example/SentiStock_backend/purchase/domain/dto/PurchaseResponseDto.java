@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class PurchaseResponseDto {
-    private Long id;
     private String companyId;
     private Float avgPrice;
 }
