@@ -76,11 +76,11 @@ public class AuthService {
         // 사용자 저장
         userRepository.save(user);
 
-        // 관심 섹터 저장 (필수)
+        // 관심 섹터 저장 
         saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
 
-    // 점수 → 투자성향 매핑 (UserService에서도 재사용할 수 있게 public으로 변경)
+    // 점수 → 투자성향 매핑 
     public String convertScoreToInvestorType(int score) {
         if (score >= 30) {
             return "공격투자형";
@@ -95,7 +95,7 @@ public class AuthService {
         }
     }
 
-    // 관심 섹터 저장 (UserService에서도 재사용할 수 있게 public으로 변경)
+    // 관심 섹터 저장 
     public void saveFavoriteSectorsForUser(UserEntity user, List<Long> favoriteSectorIds) {
 
         if (favoriteSectorIds == null || favoriteSectorIds.isEmpty()) {
@@ -172,7 +172,6 @@ public class AuthService {
                 .nickname(user.getNickname())
                 .investorType(user.getInvestorType())
                 .subscribe(user.isSubscribe())
-                // 응답에 온보딩 플래그 포함
                 .onboardingRequired(onboardingRequired)
                 .build();
     }
