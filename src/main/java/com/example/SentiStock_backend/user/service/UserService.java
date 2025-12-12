@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;   
+import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;        
+import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;  
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final FavoriteSectorRepository favoriteSectorRepository;
     private final AuthService authService;
+    private final FavoriteCompanyRepository favoriteCompanyRepository;
+    private final PurchaseRepository purchaseRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
 
     //  내 정보 조회
@@ -113,4 +119,35 @@ public class UserService {
         // 관심 섹터 저장은 AuthService의 공통 메서드 재사용
         authService.saveFavoriteSectorsForUser(user, request.getFavoriteSectorIds());
     }
+
+    // 회원탈퇴
+    @Transactional
+    public void deleteMyAccount(String userId) {
+        // 유저 조회
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        Long userPk = user.getId();
+
+        // 카카오 연동 해제 
+        authService.unlinkSocialAccount(user);  
+
+        // 즐겨찾기 섹터 삭제
+        favoriteSectorRepository.deleteAllByUserId(userPk);
+
+        // 즐겨찾기 종목 삭제
+        favoriteCompanyRepository.deleteAllByUserId(userPk);
+
+        // 구매 내역 삭제
+        purchaseRepository.deleteAllByUser_Id(userPk);
+
+        // 리프레시 토큰 삭제
+        refreshTokenRepository.deleteByUser(user);
+
+        // 유저 삭제
+        userRepository.delete(user);
+    }
+
+
+
 }

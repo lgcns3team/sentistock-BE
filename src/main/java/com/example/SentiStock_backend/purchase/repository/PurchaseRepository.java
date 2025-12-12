@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PurchaseRepository extends JpaRepository<PurchaseEntity, Long> {
     List<PurchaseEntity> findByUser_Id(Long userId);
+    void deleteAllByUser_Id(Long userId);
 }

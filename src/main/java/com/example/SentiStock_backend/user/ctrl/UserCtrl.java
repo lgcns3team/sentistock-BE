@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -118,6 +119,7 @@ public class UserCtrl {
         return purchaseService.getMyPurchases(userId);
     }
 
+    //  내 관심 섹터 목록 조회
     @Operation(summary = "내 관심 섹터 목록 조회", description = "로그인한 사용자가 관심있어하는 섹터 목록(섹터명)을 반환합니다.")
     @GetMapping("/me/favorites/sectors")
     public List<FavoriteSectorResponseDto> getMyFavoriteSectors(
@@ -125,4 +127,21 @@ public class UserCtrl {
         Long userId = userDetails.getId();
         return favoriteSectorService.getMyFavoriteSectors(userId);
     }
+
+    //  회원 탈퇴
+    @Operation(
+    summary = "회원 탈퇴",
+    description = "로그인한 사용자의 계정을 삭제 "
+                + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제 "
+                + "카카오 회원은 서비스 연동 해제"
+    )
+    @DeleteMapping("/me/delete")   
+    public ResponseEntity<Void> deleteMyAccount(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        String userId = userDetails.getUserId();  
+        userService.deleteMyAccount(userId);
+        return ResponseEntity.noContent().build(); 
+    }
+
 }
