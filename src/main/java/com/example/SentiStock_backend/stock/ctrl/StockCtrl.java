@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v1/stock")
+@RequestMapping("/api/stock")
 @Tag(name = "Stock API", description = "종목/섹터 관련 조회 API")
 public class StockCtrl {
     @Autowired
