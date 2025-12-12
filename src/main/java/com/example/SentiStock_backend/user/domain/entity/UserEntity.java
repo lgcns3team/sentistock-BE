@@ -1,4 +1,4 @@
-package com.example.SentiStock_backend.user.domain;
+package com.example.SentiStock_backend.user.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

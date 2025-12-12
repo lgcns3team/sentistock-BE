@@ -1,10 +1,11 @@
 package com.example.SentiStock_backend.auth.domain;
 
-import com.example.SentiStock_backend.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
 @Entity
 @Table(

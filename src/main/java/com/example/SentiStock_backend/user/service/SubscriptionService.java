@@ -1,8 +1,8 @@
 package com.example.SentiStock_backend.user.service;
 
 import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;
-import com.example.SentiStock_backend.user.domain.UserEntity;
 import com.example.SentiStock_backend.user.domain.dto.SubscriptionInfoResponseDto;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
