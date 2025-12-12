@@ -4,6 +4,7 @@ import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteStatusResponseDto;
 import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/companies")
+@Tag(name = "Favorite Company API", description = "종목 즐겨찾기 관련 API")
 public class FavoriteCompanyCtrl {
 
     private final FavoriteCompanyService favoriteCompanyService;
