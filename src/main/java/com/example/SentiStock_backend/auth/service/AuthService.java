@@ -1,11 +1,11 @@
 package com.example.SentiStock_backend.auth.service;
 
-import com.example.SentiStock_backend.auth.domain.RefreshToken;
 import com.example.SentiStock_backend.auth.domain.dto.LoginRequestDto;
 import com.example.SentiStock_backend.auth.domain.dto.LoginResponseDto;
 import com.example.SentiStock_backend.auth.domain.dto.SignUpRequestDto;
 import com.example.SentiStock_backend.auth.domain.dto.TokenReissueRequestDto;
 import com.example.SentiStock_backend.auth.domain.dto.TokenResponseDto;
+import com.example.SentiStock_backend.auth.domain.entity.RefreshToken;
 import com.example.SentiStock_backend.auth.jwt.JwtTokenProvider;
 import com.example.SentiStock_backend.auth.oauth.dto.KakaoTokenResponse;
 import com.example.SentiStock_backend.auth.oauth.dto.KakaoUserInfoResponse;

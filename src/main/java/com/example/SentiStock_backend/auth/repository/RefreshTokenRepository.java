@@ -1,6 +1,6 @@
 package com.example.SentiStock_backend.auth.repository;
 
-import com.example.SentiStock_backend.auth.domain.RefreshToken;
+import com.example.SentiStock_backend.auth.domain.entity.RefreshToken;
 import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;

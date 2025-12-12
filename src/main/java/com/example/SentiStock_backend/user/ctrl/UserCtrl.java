@@ -115,7 +115,7 @@ public class UserCtrl {
     @GetMapping("/me/purchases")
     public List<UserPurchaseResponseDto> getMyPurchaseCompanies(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = userDetails.getId(); // = UserEntity.id(Long)
+        Long userId = userDetails.getId(); 
         return purchaseService.getMyPurchases(userId);
     }
 
