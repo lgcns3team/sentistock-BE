@@ -39,6 +39,9 @@ public class NotificationEntity {
     @Column(name = "profit_change", nullable = false)
     private Double profitChange;
 
+    @Column(name = "senti_change", nullable = false)
+    private Double sentiChange;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;

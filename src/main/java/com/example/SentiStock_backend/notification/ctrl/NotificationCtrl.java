@@ -3,7 +3,6 @@ package com.example.SentiStock_backend.notification.ctrl;
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.notification.service.NotificationService;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationResponseDto;
-import com.example.SentiStock_backend.notification.domain.dto.ProfitAlertRequestDto;
 import com.example.SentiStock_backend.purchase.service.PurchaseAlertService;
 
 import lombok.RequiredArgsConstructor;
@@ -55,11 +54,19 @@ public class NotificationCtrl {
     @PostMapping("/profit")
     @Operation(summary = "유저 수익률 변동 알림 생성", description = "사용자가 입력한 변동률 기준으로 보유한 모든 종목의 수익률을 검사하여 알림을 생성합니다.")
     public ResponseEntity<Void> createUserProfitAlert(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody ProfitAlertRequestDto request) {
-        purchaseAlertService.checkUserProfitAlert(
-                userDetails.getId(),
-                request.getProfitChange());
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        purchaseAlertService.checkUserAlerts(userDetails.getId());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/sentiment")
+    @Operation(summary = "유저 감정 점수 변동 알림 생성", description = "매수 시점 대비 감정 점수 변동이 기준치를 넘으면 알림을 생성합니다.")
+    public ResponseEntity<Void> createUserSentimentAlert(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        notificationService.checkUserSentimentAlert(userDetails.getId());
         return ResponseEntity.ok().build();
     }
 

@@ -47,5 +47,5 @@ public class PurchaseEntity {
     private Float avgPrice;
 
     @Column(name = "pur_senti", nullable = false)
-    private Long purSenti;
+    private Double purSenti;
 }

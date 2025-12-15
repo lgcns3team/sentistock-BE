@@ -6,6 +6,10 @@ import com.example.SentiStock_backend.purchase.domain.dto.PurchaseRequestDto;
 import com.example.SentiStock_backend.purchase.domain.dto.PurchaseResponseDto;
 import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
 import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
+import com.example.SentiStock_backend.sentiment.domain.entity.SentimentEntity;
+import com.example.SentiStock_backend.sentiment.domain.entity.StocksScoreEntity;
+import com.example.SentiStock_backend.sentiment.repository.SentimentRepository;
+import com.example.SentiStock_backend.sentiment.repository.StocksScoreRepository;
 import com.example.SentiStock_backend.stock.domain.entity.StockEntity;
 import com.example.SentiStock_backend.stock.repository.StockRepository;
 import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
@@ -26,9 +30,10 @@ public class PurchaseService {
         private final CompanyRepository companyRepository;
         private final StockRepository stockRepository;
         private final UserRepository userRepository;
+        private final StocksScoreRepository stocksScoreRepository;
 
         @Transactional
-        public PurchaseResponseDto savePurchase(Long userId,PurchaseRequestDto request) {
+        public PurchaseResponseDto savePurchase(Long userId, PurchaseRequestDto request) {
 
                 UserEntity user = userRepository.findById(userId)
                                 .orElseThrow(() -> new RuntimeException("User Not Found"));
@@ -36,10 +41,16 @@ public class PurchaseService {
                 CompanyEntity company = companyRepository.findById(request.getCompanyId())
                                 .orElseThrow(() -> new RuntimeException("Company Not Found"));
 
+                Double latestSenti = stocksScoreRepository
+                                .findTopByCompany_IdOrderByDateDesc(company.getId())
+                                .map(StocksScoreEntity::getScore)
+                                .orElse(null);
+
                 PurchaseEntity purchase = PurchaseEntity.builder()
                                 .user(user)
                                 .company(company)
                                 .avgPrice(request.getAvgPrice())
+                                .purSenti(latestSenti)
                                 .build();
 
                 purchaseRepository.save(purchase);
