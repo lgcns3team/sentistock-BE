@@ -73,4 +73,62 @@ public class NotificationService {
         notification.setCheck(true);
         notificationRepository.save(notification);
     }
+
+    /**
+     * 수익률 변동 알림 생성
+     */
+    public void sendProfitNotification(
+            UserEntity user,
+            CompanyEntity company,
+            Double profitChange,
+            String type) {
+
+        String content;
+
+        if ("PROFIT_UP".equals(type)) {
+            content = company.getName()
+                    + " 수익률이 +" + profitChange + "% 이상 변동했습니다.";
+        } else {
+            content = company.getName()
+                    + " 수익률이 -" + profitChange + "% 이상 변동했습니다.";
+        }
+
+        NotificationEntity notification = NotificationEntity.builder()
+                .user(user)
+                .company(company)
+                .content(content)
+                .type(type)
+                .profitChange(profitChange)
+                .date(LocalDateTime.now())
+                .isCheck(false)
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * 감정 점수 변화 알림 생성
+     */
+    public void sendSentimentNotification(
+            UserEntity user,
+            CompanyEntity company,
+            Long baseSenti,
+            Long currentSenti) {
+
+        String content = company.getName()
+                + " 감정 점수가 매수 당시 대비 크게 변했습니다."
+                + " (기준: " + baseSenti + ", 현재: " + currentSenti + ")";
+
+        NotificationEntity notification = NotificationEntity.builder()
+                .user(user)
+                .company(company)
+                .content(content)
+                .type("SENTIMENT_CHANGE")
+                .date(LocalDateTime.now())
+                .isCheck(false)
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
 }

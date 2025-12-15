@@ -3,6 +3,8 @@ package com.example.SentiStock_backend.notification.ctrl;
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.notification.service.NotificationService;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationResponseDto;
+import com.example.SentiStock_backend.notification.domain.dto.ProfitAlertRequestDto;
+import com.example.SentiStock_backend.purchase.service.PurchaseAlertService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +22,7 @@ import java.util.List;
 public class NotificationCtrl {
 
     private final NotificationService notificationService;
+    private final PurchaseAlertService purchaseAlertService;
 
     /**
      * 유저 알림 목록 조회
@@ -45,4 +48,19 @@ public class NotificationCtrl {
         notificationService.checkNotification(notificationId, userDetails.getId());
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * 수익률 변동 알림 생성 요청
+     */
+    @PostMapping("/profit")
+    @Operation(summary = "유저 수익률 변동 알림 생성", description = "사용자가 입력한 변동률 기준으로 보유한 모든 종목의 수익률을 검사하여 알림을 생성합니다.")
+    public ResponseEntity<Void> createUserProfitAlert(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ProfitAlertRequestDto request) {
+        purchaseAlertService.checkUserProfitAlert(
+                userDetails.getId(),
+                request.getProfitChange());
+        return ResponseEntity.ok().build();
+    }
+
 }

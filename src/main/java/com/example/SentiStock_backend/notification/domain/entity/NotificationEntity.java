@@ -36,6 +36,9 @@ public class NotificationEntity {
     @Column(name = "is_check", nullable = false)
     private boolean isCheck;
 
+    @Column(name = "profit_change", nullable = false)
+    private Double profitChange;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;

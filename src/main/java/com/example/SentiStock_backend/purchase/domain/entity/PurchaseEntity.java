@@ -21,8 +21,8 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "Purchase", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "company_id"})
-    })
+        @UniqueConstraint(columnNames = { "user_id", "company_id" })
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,9 +40,12 @@ public class PurchaseEntity {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)  
+    @JoinColumn(name = "company_id", nullable = false)
     private CompanyEntity company;
 
     @Column(name = "avg_price", nullable = false)
     private Float avgPrice;
+
+    @Column(name = "pur_senti", nullable = false)
+    private Long purSenti;
 }
