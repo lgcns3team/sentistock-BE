@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationSettingRequestDto;
@@ -16,6 +17,7 @@ import com.example.SentiStock_backend.notification.service.NotificationSettingSe
 @RestController
 @RequestMapping("/api/notifications/settings")
 @RequiredArgsConstructor
+@Tag(name = "Notification Setting Controller", description = "알림 설정 관련 API")
 public class NotificationSettingCtrl {
 
     private final NotificationSettingService notificationSettingService;
