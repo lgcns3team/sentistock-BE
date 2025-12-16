@@ -20,7 +20,7 @@ public class NotificationSettingCtrl {
 
     private final NotificationSettingService notificationSettingService;
 
-    @Operation(summary = "알림 설정 조회")
+    @Operation(summary = "알림 설정 조회", description = "로그인한 유저의 알림 설정을 불러옵니다.")
     @GetMapping
     public ResponseEntity<NotificationSettingResponseDto> getSetting(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -29,7 +29,7 @@ public class NotificationSettingCtrl {
                 notificationSettingService.getSetting(userDetails.getId()));
     }
 
-    @Operation(summary = "알림 설정 수정")
+    @Operation(summary = "알림 설정 수정", description = "로그인한 유저의 알림 설정을 수정합니다.")
     @PatchMapping
     public ResponseEntity<Void> updateSetting(
             @AuthenticationPrincipal CustomUserDetails userDetails,

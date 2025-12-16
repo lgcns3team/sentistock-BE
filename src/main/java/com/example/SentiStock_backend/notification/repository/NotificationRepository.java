@@ -15,4 +15,10 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
     Optional<NotificationEntity> findTopByUser_IdAndTypeOrderByDateDesc(
         Long userId, String type);
 
+    boolean existsByUser_IdAndCompany_IdAndTypeAndIsCheckFalse(
+        Long userId,
+        String companyId,
+        String type
+    );
+
 }
