@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StocksScoreRepository extends JpaRepository<StocksScoreEntity, Long> {
@@ -16,4 +17,6 @@ public interface StocksScoreRepository extends JpaRepository<StocksScoreEntity, 
      */
     List<StocksScoreEntity> findTop7ByCompanyIdOrderByDateDesc(String companyId);
 
+    Optional<StocksScoreEntity> findTopByCompany_IdOrderByDateDesc(String companyId);
+    
 }
