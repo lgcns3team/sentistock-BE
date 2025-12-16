@@ -40,8 +40,7 @@ public class SecurityConfig {
                                 "/api/auth/reissue",
                                 "/swagger-ui/**",
                                 "/api/auth/oauth/**",
-                                "/v3/api-docs/**",
-                                "/api/sentiment/**" // Swagger OpenAPI 문서
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
