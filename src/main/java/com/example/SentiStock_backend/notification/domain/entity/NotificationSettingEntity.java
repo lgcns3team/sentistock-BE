@@ -7,7 +7,7 @@ import lombok.*;
 
 @Entity
 @Table(
-    name = "notification_settings",
+    name = "Notification_settings",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = "user_id")
     }

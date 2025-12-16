@@ -4,6 +4,7 @@ import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.user.domain.dto.SubscriptionInfoResponseDto;
 import com.example.SentiStock_backend.user.service.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/subscriptions")
+@Tag(name = "Subscription API", description = "사용자 구독 관리 관련 API")
 public class SubscriptionCtrl {
 
     private final SubscriptionService subscriptionService;

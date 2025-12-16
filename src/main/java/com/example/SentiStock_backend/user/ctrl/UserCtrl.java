@@ -14,6 +14,7 @@ import com.example.SentiStock_backend.user.service.UserService;
 import com.example.SentiStock_backend.favorite.service.FavoriteSectorService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
+@Tag(name = "User API", description = "사용자 정보 조회 및 수정, 회원 탈퇴, 온보딩 완료 처리 등의 API")
 public class UserCtrl {
 
     private final UserService userService;

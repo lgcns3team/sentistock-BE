@@ -4,6 +4,7 @@ import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteStatusResponseDto;
 import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/companies")
+@Tag(name = "Favorite Company API", description = "종목 즐겨찾기 관련 API")
 public class FavoriteCompanyCtrl {
 
     private final FavoriteCompanyService favoriteCompanyService;
 
     @Operation(summary = "종목 즐겨찾기 여부 조회",
-            description = "사용자가 해당 종목을 즐겨찾기했는지 여부를 반환 (true/false).")
+            description = "사용자가 해당 종목을 즐겨찾기했는지 여부를 반환 (true/false)."
+                         + "이 값에 따라 별 색깔 표시.")
     @GetMapping("/{companyId}/favorite")
     public FavoriteStatusResponseDto getFavoriteStatus(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -31,8 +34,7 @@ public class FavoriteCompanyCtrl {
             summary = "종목 즐겨찾기",
             description = "즐겨찾기 버튼 클릭 시 호출 "
                         + "이미 true(즐찾상태)라면 false(해제), false(해제)라면 true(즐찾)로 설정 변경. "
-                        + "반환되는 값은 변경된 최신 즐겨찾기 상태"
-    )
+                        + "반환되는 값은 변경된 최신 즐겨찾기 상태")
     @PostMapping("/{companyId}/favorite/star")
     public FavoriteStatusResponseDto toggleFavorite(
             @AuthenticationPrincipal CustomUserDetails userDetails,

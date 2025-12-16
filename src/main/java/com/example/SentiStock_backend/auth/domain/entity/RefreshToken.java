@@ -9,7 +9,7 @@ import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
 @Entity
 @Table(
-    name = "refresh_tokens",
+    name = "Refresh_tokens",
     indexes = {
         @Index(name = "idx_refresh_token_user", columnList = "user_id")
     }

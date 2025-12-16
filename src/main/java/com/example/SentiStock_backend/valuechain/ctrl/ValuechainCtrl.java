@@ -17,7 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v1/valuechains")
+@RequestMapping("/api/valuechains")
 @Tag(name = "Valuechain API", description = "기업 간 Value Chain(밸류체인) 관계를 조회하는 API")
 public class ValuechainCtrl {
 
