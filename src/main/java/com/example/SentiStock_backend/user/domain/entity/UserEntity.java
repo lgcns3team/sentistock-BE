@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(
-    name = "users",
+    name = "Users",
     indexes = {
         @Index(name = "uk_users_user_id", columnList = "user_id", unique = true),
         @Index(name = "uk_users_user_email", columnList = "user_email", unique = true),
