@@ -3,7 +3,6 @@ package com.example.SentiStock_backend.notification.ctrl;
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
 import com.example.SentiStock_backend.notification.service.NotificationService;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationResponseDto;
-import com.example.SentiStock_backend.purchase.service.PurchaseAlertService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +20,6 @@ import java.util.List;
 public class NotificationCtrl {
 
     private final NotificationService notificationService;
-    private final PurchaseAlertService purchaseAlertService;
 
     /**
      * 유저 알림 목록 조회
@@ -56,11 +54,14 @@ public class NotificationCtrl {
     public ResponseEntity<Void> createUserProfitAlert(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        purchaseAlertService.checkUserAlerts(userDetails.getId());
+        notificationService.checkUserProfitAlert(userDetails.getId());
 
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 감정 점수 변동 알림 생성 요청
+     */
     @PostMapping("/sentiment")
     @Operation(summary = "유저 감정 점수 변동 알림 생성", description = "매수 시점 대비 감정 점수 변동이 기준치를 넘으면 알림을 생성합니다.")
     public ResponseEntity<Void> createUserSentimentAlert(
