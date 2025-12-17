@@ -7,6 +7,7 @@ import com.example.SentiStock_backend.notification.domain.dto.NotificationRespon
 import lombok.RequiredArgsConstructor;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@Tag(name = "Notification Controller", description = "알림 관련 API")   
 public class NotificationCtrl {
 
     private final NotificationService notificationService;
