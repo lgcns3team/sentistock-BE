@@ -11,11 +11,11 @@ import lombok.*;
 public class SentimentResponseDto {
 
     private Long id;
-    private Long probPos;
-    private Long probNeg;
-    private Long probNeu;
+    private Double probPos;
+    private Double probNeg;
+    private Double probNeu;
     private String label;
-    private Long score;
+    private Double score;
     private String date;
     private Long newsId;
 
