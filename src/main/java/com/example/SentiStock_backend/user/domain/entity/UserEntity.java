@@ -58,7 +58,7 @@ public class UserEntity {
     private String providerId;
 
     // FCM 토큰 
-    @Column(name = "fcm_token", length = 255)
+    @Column(name = "fcm_token", length = 255, nullable = true)
     private String fcmToken;
 
     public void changeNickname(String nickname) {
