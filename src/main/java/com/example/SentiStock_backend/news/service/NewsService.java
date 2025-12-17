@@ -32,7 +32,7 @@ public class NewsService {
                     return NewsSentimentDto.builder()
                             .newsId(news.getId())
                             .title(news.getTitle())
-                            .score(sentiment != null ? sentiment.getScore() : null)
+                            .score(sentiment != null ? Math.round(sentiment.getScore()) : null)
                             .url(news.getUrl())
                             .build();
                 })

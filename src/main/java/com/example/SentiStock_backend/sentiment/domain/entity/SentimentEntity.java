@@ -32,15 +32,15 @@ public class SentimentEntity {
     private Long id;
 
     @Column(name = "prob_pos", nullable = false)
-    private Long probPos;  //   긍정 확률
+    private Double probPos;  //   긍정 확률
     @Column(name = "prob_neg", nullable = false)
-    private Long probNeg;  //   부정 확률
+    private Double probNeg;  //   부정 확률
     @Column(name = "prob_neu", nullable = false)
-    private Long probNeu;  //   중립 확률 
+    private Double probNeu;  //   중립 확률 
     @Column(name = "label", nullable = false)  
     private String label; //   감정 라벨
     @Column(name = "score", nullable = false)
-    private Long score; //   감정 점수
+    private Double score; //   감정 점수
     @Column(name = "date", nullable = false)
     private String date;  //   감정 분석 날짜
 
