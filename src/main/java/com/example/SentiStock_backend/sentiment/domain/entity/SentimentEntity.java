@@ -31,12 +31,17 @@ public class SentimentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "prob_pos", nullable = false)
     private Long probPos;  //   긍정 확률
+    @Column(name = "prob_neg", nullable = false)
     private Long probNeg;  //   부정 확률
-    private Long probNeu;  //   중립 확률   
+    @Column(name = "prob_neu", nullable = false)
+    private Long probNeu;  //   중립 확률 
+    @Column(name = "label", nullable = false)  
     private String label; //   감정 라벨
+    @Column(name = "score", nullable = false)
     private Long score; //   감정 점수
+    @Column(name = "date", nullable = false)
     private String date;  //   감정 분석 날짜
 
     @ManyToOne(fetch = FetchType.LAZY)
