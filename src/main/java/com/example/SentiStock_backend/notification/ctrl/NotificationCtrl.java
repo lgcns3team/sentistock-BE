@@ -60,5 +60,4 @@ public class NotificationCtrl {
         notificationService.checkUserSentimentAlert(userDetails.getId());
         return ResponseEntity.ok().build();
     }
-
 }

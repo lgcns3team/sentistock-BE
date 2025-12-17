@@ -6,14 +6,11 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(
-    name = "Users",
-    indexes = {
+@Table(name = "Users", indexes = {
         @Index(name = "uk_users_user_id", columnList = "user_id", unique = true),
         @Index(name = "uk_users_user_email", columnList = "user_email", unique = true),
         @Index(name = "uk_users_provider_provider_id", columnList = "provider, provider_id")
-    }
-)
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -60,6 +57,9 @@ public class UserEntity {
     @Column(name = "provider_id", length = 100)
     private String providerId;
 
+    // FCM 토큰 
+    @Column(name = "fcm_token", length = 255)
+    private String fcmToken;
 
     public void changeNickname(String nickname) {
         this.nickname = nickname;
@@ -92,7 +92,7 @@ public class UserEntity {
         this.subscribeAt = null;
     }
 
-    //provider가 null이면 LOCAL
+    // provider가 null이면 LOCAL
     public boolean isLocalUser() {
         return provider == null
                 || provider.isBlank()

@@ -25,6 +25,7 @@ public class NotificationService {
         private final PurchaseRepository purchaseRepository;
         private final StockRepository stockRepository;
         private final StocksScoreRepository stocksScoreRepository;
+        private final FirebaseService firebaseService;
 
         /**
          * 알림 조회
@@ -161,9 +162,9 @@ public class NotificationService {
                                                 type);
 
                 if (exists) {
-                        return; 
+                        return;
                 }
-                
+
                 NotificationEntity notification = NotificationEntity.builder()
                                 .user(purchase.getUser())
                                 .company(purchase.getCompany())
@@ -174,5 +175,14 @@ public class NotificationService {
                                 .build();
 
                 notificationRepository.save(notification);
+                
+                String fcmToken = purchase.getUser().getFcmToken();
+                if (fcmToken != null) {
+                        firebaseService.sendPush(
+                                        fcmToken,
+                                        "센티스톡 알림",
+                                        content);
+                }
+
         }
 }

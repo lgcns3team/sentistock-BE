@@ -31,3 +31,4 @@ build/
 *.yml
 *.yaml
 .vscode/
+firebase-key.json
