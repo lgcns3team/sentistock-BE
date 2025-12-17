@@ -35,9 +35,9 @@ public class StocksScoreEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private CompanyEntity company;
 
-    @Column(nullable = false)
+    @Column(name = "score", nullable = false)
     private Double score; // 감정 점수 평균
 
-    @Column(nullable = false)
+    @Column(name = "date",nullable = false)
     private LocalDateTime date; // 점수 생성 시간
 }

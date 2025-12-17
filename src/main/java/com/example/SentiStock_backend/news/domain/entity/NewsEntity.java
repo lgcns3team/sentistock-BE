@@ -44,7 +44,7 @@ public class NewsEntity {
     @Column(name = "url",nullable = false, length = 500)
     private String url;
 
-    @Column(name = "summary_text",nullable = true, length = 50)
+    @Column(name = "summary_text",nullable = true, length = 300)
     private String summaryText;
 
     @ManyToOne(fetch = FetchType.LAZY)
