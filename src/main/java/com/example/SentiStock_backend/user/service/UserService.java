@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;   
 import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;        
 import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;  
+import com.example.SentiStock_backend.notification.repository.NotificationRepository;
+import com.example.SentiStock_backend.notification.repository.NotificationSettingRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,8 @@ public class UserService {
     private final FavoriteCompanyRepository favoriteCompanyRepository;
     private final PurchaseRepository purchaseRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final NotificationRepository notificationRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
 
 
     //  내 정보 조회
@@ -130,7 +134,13 @@ public class UserService {
         Long userPk = user.getId();
 
         // 카카오 연동 해제 
-        authService.unlinkSocialAccount(user);  
+        if (user.isSocialUser()) {
+            authService.unlinkSocialAccount(user);
+        } 
+
+        // 알림 관련 삭제 
+        notificationRepository.deleteAllByUser_Id(userPk);      
+        notificationSettingRepository.deleteByUser_Id(userPk); 
 
         // 즐겨찾기 섹터 삭제
         favoriteSectorRepository.deleteAllByUserId(userPk);

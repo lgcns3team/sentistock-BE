@@ -20,5 +20,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
         String companyId,
         String type
     );
+    
+    void deleteAllByUser_Id(Long userId);
 
 }

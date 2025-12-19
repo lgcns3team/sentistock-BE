@@ -8,4 +8,6 @@ public interface NotificationSettingRepository
         extends JpaRepository<NotificationSettingEntity, Long> {
 
     Optional<NotificationSettingEntity> findByUser_Id(Long userId);
+
+    void deleteByUser_Id(Long userId);
 }
