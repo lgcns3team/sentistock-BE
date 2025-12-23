@@ -146,7 +146,6 @@ public class NotificationService {
                                 ? notificationSettingService.getProfitChange(userId)
                                 : getProfitThresholdByInvestorType(user.getInvestorType());
 
-                System.out.println("profitThreshold: " + profitThreshold);
 
                 for (PurchaseEntity purchase : purchases) {
 
@@ -206,8 +205,6 @@ public class NotificationService {
                 double sentiChange = getSentimentDelta(investorType);
                 double min = getSentimentMin(investorType);
                 double max = getSentimentMax(investorType);
-
-                System.out.println("sentiChange: " + sentiChange + ", min: " + min + ", max: " + max);
 
                 List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
 

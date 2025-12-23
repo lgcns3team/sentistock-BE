@@ -30,6 +30,4 @@ public class NotificationSettingEntity {
     @Column(name = "profit_change", nullable = false)
     private Double profitChange;
 
-    @Column(name = "senti_change", nullable = false)
-    private Double sentiChange;
 }
