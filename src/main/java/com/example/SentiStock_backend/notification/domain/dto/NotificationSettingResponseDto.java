@@ -8,5 +8,4 @@ import lombok.Getter;
 public class NotificationSettingResponseDto {
 
     private Double profitChange;
-    private Double sentiChange;
 }

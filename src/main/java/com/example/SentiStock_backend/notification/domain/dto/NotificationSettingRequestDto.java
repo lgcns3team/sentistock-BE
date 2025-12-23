@@ -8,5 +8,4 @@ import lombok.NoArgsConstructor;
 public class NotificationSettingRequestDto {
 
     private Double profitChange; 
-    private Double sentiChange;  
 }
