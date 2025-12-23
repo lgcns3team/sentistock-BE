@@ -76,6 +76,27 @@ public class NotificationService {
                 }
         }
 
+        private double getProfitThresholdByInvestorType(String investorType) {
+
+                if (investorType == null)
+                        return 10.0;
+
+                switch (investorType) {
+                        case "안정형":
+                                return 4.0;
+                        case "안정추구형":
+                                return 7.0;
+                        case "위험중립형":
+                                return 10.0;
+                        case "적극투자형":
+                                return 20.0;
+                        case "공격투자형":
+                                return 30.0;
+                        default:
+                                return 10.0;
+                }
+        }
+
         /**
          * 알림 조회
          **/
@@ -115,9 +136,17 @@ public class NotificationService {
          **/
         public void checkUserProfitAlert(Long userId) {
 
-                double profitChange = notificationSettingService.getProfitChange(userId);
-
                 List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
+                if (purchases.isEmpty())
+                        return;
+
+                UserEntity user = purchases.get(0).getUser();
+
+                double profitThreshold = user.isSubscribe()
+                                ? notificationSettingService.getProfitChange(userId)
+                                : getProfitThresholdByInvestorType(user.getInvestorType());
+
+                System.out.println("profitThreshold: " + profitThreshold);
 
                 for (PurchaseEntity purchase : purchases) {
 
@@ -136,20 +165,28 @@ public class NotificationService {
                         double currentPrice = latestStock.getStckPrpr();
                         double profitRate = ((currentPrice - avgPrice) / avgPrice) * 100;
 
-                        if (Math.abs(profitRate) < profitChange)
+                        if (Math.abs(profitRate) < profitThreshold)
                                 continue;
 
-                        String type = profitRate > 0 ? "PROFIT_UP" : "PROFIT_DOWN";
+                        String type;
+                        String action;
+
+                        if (profitRate > 0) {
+                                type = "PROFIT_TAKE";
+                                action = "익절";
+                        } else {
+                                type = "PROFIT_STOP_LOSS";
+                                action = "손절";
+                        }
 
                         String content = purchase.getCompany().getName()
                                         + " 수익률이 "
                                         + String.format("%.2f", profitRate)
-                                        + "% 변동했습니다.";
+                                        + "%로 "
+                                        + action
+                                        + " 기준에 도달했습니다.";
 
-                        saveNotification(
-                                        purchase,
-                                        content,
-                                        type);
+                        saveNotification(purchase, content, type);
                 }
         }
 
@@ -164,7 +201,13 @@ public class NotificationService {
                                 .map(PurchaseEntity::getUser)
                                 .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-                double sentiChange = getSentimentDelta(user.getInvestorType());
+                String investorType = user.getInvestorType();
+
+                double sentiChange = getSentimentDelta(investorType);
+                double min = getSentimentMin(investorType);
+                double max = getSentimentMax(investorType);
+
+                System.out.println("sentiChange: " + sentiChange + ", min: " + min + ", max: " + max);
 
                 List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
 
@@ -182,7 +225,12 @@ public class NotificationService {
                         if (latestScore == null)
                                 continue;
 
-                        double diff = latestScore.getScore() - baseSenti;
+                        double currentSenti = latestScore.getScore();
+
+                        if (currentSenti < min || currentSenti > max)
+                                continue;
+
+                        double diff = currentSenti - baseSenti;
 
                         if (Math.abs(diff) < sentiChange)
                                 continue;
@@ -198,10 +246,7 @@ public class NotificationService {
                                         + (diff > 0 ? "상승" : "하락")
                                         + "했습니다.";
 
-                        saveNotification(
-                                        purchase,
-                                        content,
-                                        type);
+                        saveNotification(purchase, content, type);
                 }
         }
 
