@@ -33,12 +33,12 @@ public interface SentimentRepository extends JpaRepository<SentimentEntity, Long
      */
     @Query(value = """
                 SELECT
-                    SUM(CASE WHEN s.label = 'POS' THEN 1 ELSE 0 END) AS posCount,
-                    SUM(CASE WHEN s.label = 'NEG' THEN 1 ELSE 0 END) AS negCount,
-                    SUM(CASE WHEN s.label = 'NEU' THEN 1 ELSE 0 END) AS neuCount,
+                    SUM(CASE WHEN s.label = 'POSITIVE' THEN 1 ELSE 0 END) AS posCount,
+                    SUM(CASE WHEN s.label = 'NEGATIVE' THEN 1 ELSE 0 END) AS negCount,
+                    SUM(CASE WHEN s.label = 'NEUTRAL' THEN 1 ELSE 0 END) AS neuCount,
                     COUNT(*) AS totalCount
-                FROM sentiments s
-                JOIN news n ON s.news_id = n.id
+                FROM Sentiments s
+                JOIN News n ON s.news_id = n.id
                 WHERE n.company_id = :companyId
             """, nativeQuery = true)
     List<Object[]> getSentimentCountByCompany(@Param("companyId") String companyId);

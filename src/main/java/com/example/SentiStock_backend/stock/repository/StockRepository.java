@@ -22,5 +22,5 @@ public interface StockRepository extends JpaRepository<StockEntity, Long> {
                         LocalDateTime start,
                         LocalDateTime end);
 
-        Optional<StockEntity> findByCompanyId(String companyId);
+        Optional<StockEntity> findTop1ByCompanyIdOrderByDateDesc(String companyId);
 }
