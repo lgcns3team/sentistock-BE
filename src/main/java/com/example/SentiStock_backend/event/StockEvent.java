@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 @ToString 
 public class StockEvent {
 
+    private Long userId; 
+
     private StockEventType type;
     private String companyId;
 
-    // 주가 관련
     private Double profitRate;
 
-    // 감정 관련
     private Double sentimentScore;
     private Double sentimentChange;
 
