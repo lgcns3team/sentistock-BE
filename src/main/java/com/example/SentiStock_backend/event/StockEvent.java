@@ -1,6 +1,7 @@
 package com.example.SentiStock_backend.event;
 
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,5 +14,7 @@ public class StockEvent {
     private String companyId;
     private Double profitRate;
     private Double sentimentChange;
+    LocalDateTime occurredAt;
+
 
 }
