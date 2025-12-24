@@ -11,14 +11,16 @@ import com.example.SentiStock_backend.stock.domain.entity.StockEntity;
 
 @Repository
 public interface StockRepository extends JpaRepository<StockEntity, Long> {
-    Optional<StockEntity> findTopByCompanyIdOrderByDateDesc(String companyId);
+        Optional<StockEntity> findTopByCompanyIdOrderByDateDesc(String companyId);
 
-    List<StockEntity> findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(
-            String companyId,
-            LocalDateTime date);
+        List<StockEntity> findByCompany_IdAndDateGreaterThanEqualOrderByDateAsc(
+                        String companyId,
+                        LocalDateTime date);
 
-    List<StockEntity> findByCompany_IdAndDateBetweenOrderByDateAsc(
-            String companyId,
-            LocalDateTime start,
-            LocalDateTime end);
+        List<StockEntity> findByCompany_IdAndDateBetweenOrderByDateAsc(
+                        String companyId,
+                        LocalDateTime start,
+                        LocalDateTime end);
+
+        Optional<StockEntity> findByCompanyId(String companyId);
 }

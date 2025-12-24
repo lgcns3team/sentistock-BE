@@ -1,9 +1,12 @@
 package com.example.SentiStock_backend.notification.consumer;
 
+import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
+import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.event.StockEvent;
 import com.example.SentiStock_backend.notification.decision.NotificationDecisionService;
 import com.example.SentiStock_backend.notification.domain.type.NotificationType;
 import com.example.SentiStock_backend.notification.service.NotificationService;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.service.UserInvestorService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,38 +22,43 @@ public class NotificationConsumer {
         private final NotificationDecisionService decisionService;
         private final UserInvestorService userInvestorService;
         private final NotificationService notificationService;
+        private final CompanyRepository companyRepository;
 
         @KafkaListener(topics = "stock-events", groupId = "notification-group")
         public void consume(StockEvent event) {
-
-                Long userId = event.getUserId();
-
-                if (userId == null) {
-                        log.warn("⚠ userId is null. Skip event: {}", event);
+                if (event == null || event.getUserId() == null || event.getCompanyId() == null) {
+                        log.warn("Invalid event payload: {}", event);
                         return;
                 }
 
-                String investorType = userInvestorService.getInvestorType(userId);
+                log.info("Kafka StockEvent received: {}", event);
 
-                NotificationType type = decisionService.decide(event, investorType);
+                try {
+                        UserEntity user = userInvestorService.findById(event.getUserId());
+                        CompanyEntity company = companyRepository
+                                        .findById(event.getCompanyId())
+                                        .orElse(null);
 
-                if (type == null)
-                        return;
+                        if (company == null) {
+                                log.warn("Company not found. companyId={}", event.getCompanyId());
+                                return;
+                        }
 
-                // 🔴 이 부분은 나중에 바꿀 예정이므로 지금은 주석 처리해도 됨
-                /*
-                 * notificationService.sendNotification(
-                 * event.getCompanyId(),
-                 * type,
-                 * event
-                 * );
-                 */
+                        NotificationType type = decisionService.decide(event, user.getInvestorType());
 
-                log.info(
-                                "🔔 알림 판단 결과 userId={}, investorType={}, companyId={}, type={}",
-                                userId,
-                                investorType,
-                                event.getCompanyId(),
-                                type);
+                        if (type == NotificationType.NONE) {
+                                return;
+                        }
+
+                        notificationService.sendNotification(user, company, type, event);
+
+                        log.info("Notification processed. userId={}, companyId={}, type={}",
+                                        user.getId(), company.getId(), type);
+
+                } catch (Exception e) {
+                        log.error("Kafka consume failed. event={}", event, e);
+                }
+
+                log.info("event class = {}", event.getClass());
         }
 }

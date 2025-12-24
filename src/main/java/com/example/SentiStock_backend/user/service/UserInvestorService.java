@@ -22,4 +22,9 @@ public class UserInvestorService {
                 .map(UserEntity::getInvestorType)
                 .orElse("위험중립형");
     }
+    
+    public UserEntity findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User Not Found"));
+    }
 }

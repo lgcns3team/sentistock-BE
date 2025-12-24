@@ -1,36 +1,35 @@
 package com.example.SentiStock_backend.notification.ctrl;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.SentiStock_backend.event.StockEvent;
-import com.example.SentiStock_backend.event.StockEventProducer;
-import com.example.SentiStock_backend.event.StockEventType;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/test")
 public class KafkaTestCtrl {
 
-    private final StockEventProducer producer;
+    private final KafkaTemplate<String, StockEvent> kafkaTemplate;
 
-    @GetMapping("/kafka")
-    public String sendTestEvent() {
+    @PostMapping("/test/kafka")
+    public void sendTestEvent() {
 
-        producer.publish(
-                StockEvent.builder()
-                        .userId(1L)
-                        .type(StockEventType.SENTIMENT_CHANGED)
-                        .companyId("005930")
-                        .sentimentScore(0.42)
-                        .sentimentChange(-0.35)
-                        .occurredAt(LocalDateTime.now())
-                        .build());
+        StockEvent event = StockEvent.builder()
+                .userId(1L)
+                .companyId("005930")
+                .profitRate(0.0)
+                .sentimentChange(30.0)
+                .build();
 
-        return "Kafka event sent";
+        kafkaTemplate.send("stock-events", event);
     }
+
+    @PostMapping("/test/stock-event")
+    public void send(@RequestBody StockEvent event) {
+        kafkaTemplate.send("stock-events", event);
+    }
+
 }

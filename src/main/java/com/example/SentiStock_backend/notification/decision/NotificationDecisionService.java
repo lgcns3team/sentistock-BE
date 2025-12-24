@@ -2,42 +2,50 @@ package com.example.SentiStock_backend.notification.decision;
 
 import com.example.SentiStock_backend.event.StockEvent;
 import com.example.SentiStock_backend.notification.domain.type.NotificationType;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class NotificationDecisionService {
 
-    public NotificationType decide(
-            StockEvent event,
-            String investorType
-    ) {
-        Double profitRate = event.getProfitRate();
-        Double sentimentChange = event.getSentimentChange();
+    /**
+     * 핵심 판단 메서드
+     */
+    public NotificationType decide(StockEvent event, String investorType) {
 
-        double profitThreshold =
-                getProfitThresholdByInvestorType(investorType);
+        // 수익률 기준 판단 (매도 / 경고)
+        if (event.getProfitRate() != null) {
+            double threshold = getProfitThresholdByInvestorType(investorType);
 
-        double sentimentDelta =
-                getSentimentDelta(investorType);
+            if (event.getProfitRate() >= threshold) {
+                log.info("[DECISION] SELL triggered (profitRate={})", event.getProfitRate());
+                return NotificationType.SELL;
+            }
 
-        // 매도
-        if (profitRate != null && profitRate >= profitThreshold) {
-            return NotificationType.SELL;
+            if (event.getProfitRate() <= -threshold) {
+                log.info("[DECISION] WARNING triggered (profitRate={})", event.getProfitRate());
+                return NotificationType.WARNING;
+            }
         }
 
-        // 경고
-        if (profitRate != null
-                && profitRate <= -(profitThreshold * 0.5)) {
-            return NotificationType.WARNING;
+        // 감정 점수 변화 → 관심 알림
+        if (event.getSentimentChange() != null) {
+            double deltaThreshold = getSentimentDelta(investorType);
+
+            if (Math.abs(event.getSentimentChange()) >= deltaThreshold) {
+                log.info("[DECISION] INTEREST triggered (sentimentChange={})",
+                        event.getSentimentChange());
+                return NotificationType.INTEREST;
+            }
         }
 
-        // 관심
-        if (sentimentChange != null
-                && Math.abs(sentimentChange) >= sentimentDelta) {
-            return NotificationType.INTEREST;
-        }
+        // 아무 조건도 안 맞으면 알림 없음
+        return NotificationType.NONE;
 
-        return null;
+
     }
 
     private double getSentimentDelta(String investorType) {
