@@ -1,5 +1,7 @@
 package com.example.SentiStock_backend.purchase.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
@@ -48,4 +50,16 @@ public class PurchaseEntity {
 
     @Column(name = "pur_senti", nullable = false)
     private Double purSenti;
+
+    @Column(name = "last_profit_event_rate")
+    private Double lastProfitEventRate;
+
+    @Column(name = "last_profit_event_at")
+    private LocalDateTime lastProfitEventAt;
+
+    @Column(name = "last_senti_event_score")
+    private Double lastSentiEventScore;
+
+    @Column(name = "last_senti_event_at")
+    private LocalDateTime lastSentiEventAt;
 }

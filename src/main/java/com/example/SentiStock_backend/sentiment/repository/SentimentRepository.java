@@ -15,7 +15,7 @@ public interface SentimentRepository extends JpaRepository<SentimentEntity, Long
     /**
      * 뉴스 ID 리스트로 감정 데이터 조회 (최신 순)
      */
-    List<SentimentEntity> findByNewsIdInOrderByDateDesc(List<Long> newsIds);
+    List<SentimentEntity> findTop20ByNewsIdInOrderByDateDesc(List<Long> newsIds);
 
     /**
      * 특정 뉴스 ID에 대한 데이터 조회

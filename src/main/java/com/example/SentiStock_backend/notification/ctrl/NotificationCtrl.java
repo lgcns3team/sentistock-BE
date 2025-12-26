@@ -42,23 +42,4 @@ public class NotificationCtrl {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/profit")
-    @Operation(summary = "유저 수익률 변동 알림 생성", description = "사용자가 입력한 변동률 기준으로 보유한 모든 종목의 수익률을 검사하여 알림을 생성합니다.")
-    public ResponseEntity<Void> createUserProfitAlert(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        notificationService.checkUserProfitAlert(userDetails.getId());
-
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/sentiment")
-    @Operation(summary = "유저 감정 점수 변동 알림 생성", description = "매수 시점 대비 감정 점수 변동이 기준치를 넘으면 알림을 생성합니다.")
-    public ResponseEntity<Void> createUserSentimentAlert(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        notificationService.checkUserSentimentAlert(userDetails.getId());
-        return ResponseEntity.ok().build();
-    }
-
 }

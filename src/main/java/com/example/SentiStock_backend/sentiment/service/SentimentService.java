@@ -43,7 +43,7 @@ public class SentimentService {
                                 .map(NewsEntity::getId)
                                 .toList();
 
-                List<SentimentEntity> sentimentList = sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds);
+                List<SentimentEntity> sentimentList = sentimentRepository.findTop20ByNewsIdInOrderByDateDesc(newsIds);
 
                 if (sentimentList.isEmpty())
                         return 0.0;
@@ -67,7 +67,7 @@ public class SentimentService {
                                 .map(NewsEntity::getId)
                                 .toList();
 
-                return sentimentRepository.findByNewsIdInOrderByDateDesc(newsIds)
+                return sentimentRepository.findTop20ByNewsIdInOrderByDateDesc(newsIds)
                                 .stream()
                                 .limit(3)
                                 .map(SentimentResponseDto::fromEntity)

@@ -7,95 +7,22 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import com.example.SentiStock_backend.notification.domain.entity.NotificationEntity;
+import com.example.SentiStock_backend.notification.domain.type.NotificationType;
+import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
+import com.example.SentiStock_backend.event.StockEvent;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationResponseDto;
 import com.example.SentiStock_backend.notification.repository.NotificationRepository;
-import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
-import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
-import com.example.SentiStock_backend.stock.domain.entity.StockEntity;
-import com.example.SentiStock_backend.stock.repository.StockRepository;
 import com.example.SentiStock_backend.user.domain.entity.UserEntity;
-import com.example.SentiStock_backend.sentiment.domain.entity.StocksScoreEntity;
-import com.example.SentiStock_backend.sentiment.repository.StocksScoreRepository;
+
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
         private final NotificationRepository notificationRepository;
-        private final NotificationSettingService notificationSettingService;
-        private final PurchaseRepository purchaseRepository;
-        private final StockRepository stockRepository;
-        private final StocksScoreRepository stocksScoreRepository;
         private final FirebaseService firebaseService;
 
-        private double getSentimentDelta(String investorType) {
-                switch (investorType) {
-                        case "안정형":
-                                return 10.0;
-                        case "안정추구형":
-                                return 15.0;
-                        case "위험중립형":
-                                return 20.0;
-                        case "적극투자형":
-                                return 25.0;
-                        case "공격투자형":
-                                return 30.0;
-                        default:
-                }
-                return 10.0;
-        }
-
-        private double getSentimentMin(String investorType) {
-                switch (investorType) {
-                        case "안정형":
-                                return 40.0;
-                        case "안정추구형":
-                                return 30.0;
-                        case "위험중립형":
-                        case "적극투자형":
-                                return 20.0;
-                        case "공격투자형":
-                                return 0.0;
-                        default:
-                                return 20.0;
-                }
-        }
-
-        private double getSentimentMax(String investorType) {
-                switch (investorType) {
-                        case "안정형":
-                        case "안정추구형":
-                                return 80.0;
-                        case "위험중립형":
-                        case "적극투자형":
-                                return 90.0;
-                        case "공격투자형":
-                                return 100.0;
-                        default:
-                                return 90.0;
-                }
-        }
-
-        private double getProfitThresholdByInvestorType(String investorType) {
-
-                if (investorType == null)
-                        return 10.0;
-
-                switch (investorType) {
-                        case "안정형":
-                                return 4.0;
-                        case "안정추구형":
-                                return 7.0;
-                        case "위험중립형":
-                                return 10.0;
-                        case "적극투자형":
-                                return 20.0;
-                        case "공격투자형":
-                                return 30.0;
-                        default:
-                                return 10.0;
-                }
-        }
+        
 
         /**
          * 알림 조회
@@ -131,161 +58,70 @@ public class NotificationService {
                 notificationRepository.save(notification);
         }
 
-        /**
-         * 수익률 알림 트리거
-         **/
-        public void checkUserProfitAlert(Long userId) {
 
-                List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
-                if (purchases.isEmpty())
-                        return;
+        public void sendNotification(
+                        UserEntity user,
+                        CompanyEntity company,
+                        NotificationType type,
+                        StockEvent event) {
 
-                UserEntity user = purchases.get(0).getUser();
+                // 알림 타입별 메시지 생성
+                String content = buildContent(company, type, event);
 
-                double profitThreshold = user.isSubscribe()
-                                ? notificationSettingService.getProfitChange(userId)
-                                : getProfitThresholdByInvestorType(user.getInvestorType());
-
-
-                for (PurchaseEntity purchase : purchases) {
-
-                        Float avgPrice = purchase.getAvgPrice();
-                        if (avgPrice == null || avgPrice <= 0)
-                                continue;
-
-                        StockEntity latestStock = stockRepository
-                                        .findTopByCompanyIdOrderByDateDesc(
-                                                        purchase.getCompany().getId())
-                                        .orElse(null);
-
-                        if (latestStock == null)
-                                continue;
-
-                        double currentPrice = latestStock.getStckPrpr();
-                        double profitRate = ((currentPrice - avgPrice) / avgPrice) * 100;
-
-                        if (Math.abs(profitRate) < profitThreshold)
-                                continue;
-
-                        String type;
-                        String action;
-
-                        if (profitRate > 0) {
-                                type = "PROFIT_TAKE";
-                                action = "익절";
-                        } else {
-                                type = "PROFIT_STOP_LOSS";
-                                action = "손절";
-                        }
-
-                        String content = purchase.getCompany().getName()
-                                        + " 수익률이 "
-                                        + String.format("%.2f", profitRate)
-                                        + "%로 "
-                                        + action
-                                        + " 기준에 도달했습니다.";
-
-                        saveNotification(purchase, content, type);
-                }
-        }
-
-        /**
-         * 감정 점수 알림 트리거
-         **/
-        public void checkUserSentimentAlert(Long userId) {
-
-                UserEntity user = purchaseRepository.findByUser_Id(userId)
-                                .stream()
-                                .findFirst()
-                                .map(PurchaseEntity::getUser)
-                                .orElseThrow(() -> new RuntimeException("User Not Found"));
-
-                String investorType = user.getInvestorType();
-
-                double sentiChange = getSentimentDelta(investorType);
-                double min = getSentimentMin(investorType);
-                double max = getSentimentMax(investorType);
-
-                List<PurchaseEntity> purchases = purchaseRepository.findByUser_Id(userId);
-
-                for (PurchaseEntity purchase : purchases) {
-
-                        Double baseSenti = purchase.getPurSenti();
-                        if (baseSenti == null)
-                                continue;
-
-                        StocksScoreEntity latestScore = stocksScoreRepository
-                                        .findTopByCompany_IdOrderByDateDesc(
-                                                        purchase.getCompany().getId())
-                                        .orElse(null);
-
-                        if (latestScore == null)
-                                continue;
-
-                        double currentSenti = latestScore.getScore();
-
-                        if (currentSenti < min || currentSenti > max)
-                                continue;
-
-                        double diff = currentSenti - baseSenti;
-
-                        if (Math.abs(diff) < sentiChange)
-                                continue;
-
-                        String type = diff > 0
-                                        ? "SENTIMENT_SPIKE_UP"
-                                        : "SENTIMENT_SPIKE_DOWN";
-
-                        String content = purchase.getCompany().getName()
-                                        + " 감정 점수가 매수 당시 대비 "
-                                        + String.format("%.2f", Math.abs(diff))
-                                        + " 만큼 "
-                                        + (diff > 0 ? "상승" : "하락")
-                                        + "했습니다.";
-
-                        saveNotification(purchase, content, type);
-                }
-        }
-
-        /**
-         * 공통 알림 저장
-         **/
-        private void saveNotification(
-                        PurchaseEntity purchase,
-                        String content,
-                        String type) {
-
-                Long userId = purchase.getUser().getId();
-                String companyId = purchase.getCompany().getId();
-
+                // 중복 알림 방지
                 boolean exists = notificationRepository
                                 .existsByUser_IdAndCompany_IdAndTypeAndIsCheckFalse(
-                                                userId,
-                                                companyId,
-                                                type);
+                                                user.getId(),
+                                                company.getId(),
+                                                type.name());
 
                 if (exists) {
                         return;
                 }
 
+                // 알림 저장
                 NotificationEntity notification = NotificationEntity.builder()
-                                .user(purchase.getUser())
-                                .company(purchase.getCompany())
+                                .user(user)
+                                .company(company)
                                 .content(content)
-                                .type(type)
+                                .type(type.name())
                                 .date(LocalDateTime.now())
                                 .isCheck(false)
                                 .build();
 
                 notificationRepository.save(notification);
 
-                String fcmToken = purchase.getUser().getFcmToken();
-                if (fcmToken != null) {
+                // FCM 전송
+                if (user.getFcmToken() != null) {
                         firebaseService.sendPush(
-                                        fcmToken,
+                                        user.getFcmToken(),
                                         "센티스톡 알림",
                                         content);
                 }
-
         }
+
+        private String buildContent(
+                        CompanyEntity company,
+                        NotificationType type,
+                        StockEvent event) {
+                return switch (type) {
+                        case SELL -> company.getName()
+                                        + " 수익률이 "
+                                        + String.format("%.2f", event.getProfitRate())
+                                        + "%로 매도 기준에 도달했습니다.";
+
+                        case WARNING -> company.getName()
+                                        + " 수익률이 "
+                                        + String.format("%.2f", event.getProfitRate())
+                                        + "%로 하락해 주의가 필요합니다.";
+
+                        case INTEREST -> company.getName()
+                                        + " 감정 점수가 "
+                                        + String.format("%.2f", event.getSentimentChange())
+                                        + " 만큼 변동했습니다.";
+
+                        default -> "";
+                };
+        }
+
 }

@@ -21,7 +21,6 @@ public class NotificationSettingService {
 
         /**
          * 알림 설정 조회
-         * - profitChange만 반환
          */
         public NotificationSettingResponseDto getSetting(Long userId) {
 
@@ -35,7 +34,6 @@ public class NotificationSettingService {
 
         /**
          * 알림 설정 수정
-         * - profitChange만 수정 가능
          */
         @Transactional
         public void updateSetting(Long userId, NotificationSettingRequestDto request) {
@@ -54,6 +52,9 @@ public class NotificationSettingService {
                 if (request.getProfitChange() != null) {
                         setting.setProfitChange(request.getProfitChange());
                 }
+
+                settingRepository.save(setting);
+
         }
 
         /**
