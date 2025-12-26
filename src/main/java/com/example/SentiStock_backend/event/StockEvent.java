@@ -12,9 +12,11 @@ public class StockEvent {
 
     private Long userId;
     private String companyId;
+    private StockEventType type;
     private Double profitRate;
     private Double sentimentChange;
-    LocalDateTime occurredAt;
+    private LocalDateTime occurredAt;
+    private Double currentSentiment;
 
 
 }

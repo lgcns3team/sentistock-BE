@@ -51,12 +51,15 @@ public class PurchaseEntity {
     @Column(name = "pur_senti", nullable = false)
     private Double purSenti;
 
-    @Column(name = "last_event_profit_rate")
-    private Double lastEventProfitRate;
+    @Column(name = "last_profit_event_rate")
+    private Double lastProfitEventRate;
 
-    @Column(name = "last_event_senti")
-    private Double lastEventSenti;
+    @Column(name = "last_profit_event_at")
+    private LocalDateTime lastProfitEventAt;
 
-    @Column(name = "last_event_at")
-    private LocalDateTime lastEventAt;
+    @Column(name = "last_senti_event_score")
+    private Double lastSentiEventScore;
+
+    @Column(name = "last_senti_event_at")
+    private LocalDateTime lastSentiEventAt;
 }

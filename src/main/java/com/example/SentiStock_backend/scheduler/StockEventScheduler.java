@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.example.SentiStock_backend.event.StockEvent;
+import com.example.SentiStock_backend.event.StockEventType;
 import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
 import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
 import com.example.SentiStock_backend.sentiment.domain.entity.StocksScoreEntity;
@@ -31,7 +32,7 @@ public class StockEventScheduler {
 
     private static final String TOPIC = "stock-events";
 
-    // 1분 주기 (테스트용) → 운영 시 5분 / 10분
+    // 1분 주기 (테스트용)
     @Scheduled(fixedDelay = 60_000)
     public void publishStockEvents() {
 
@@ -48,96 +49,126 @@ public class StockEventScheduler {
 
     private void processPurchase(PurchaseEntity purchase) {
 
-        // 최신 주가
         StockEntity latestStock = stockRepository
-                .findTopByCompanyIdOrderByDateDesc(purchase.getCompany().getId())
+                .findTopByCompanyIdOrderByDateDesc(
+                        purchase.getCompany().getId())
                 .orElse(null);
 
-        // 최신 감정 점수
         StocksScoreEntity latestScore = stocksScoreRepository
-                .findTopByCompany_IdOrderByDateDesc(purchase.getCompany().getId())
+                .findTopByCompany_IdOrderByDateDesc(
+                        purchase.getCompany().getId())
                 .orElse(null);
 
         if (latestStock == null || latestScore == null) {
             return;
         }
 
-        // 수익률 계산
         double profitRate = calculateProfitRate(
                 purchase.getAvgPrice(),
-                latestStock.getStckPrpr()
-        );
+                latestStock.getStckPrpr());
 
-        // 감정 변화 계산
-        double sentimentChange = latestScore.getScore() - purchase.getPurSenti();
+        double currentSenti = latestScore.getScore();
 
-        // 이벤트 발행 조건 판단
-        if (!shouldPublishEvent(purchase, profitRate, latestScore.getScore())) {
+        // 완전히 분리
+        checkProfitEvent(purchase, profitRate);
+        checkSentimentEvent(purchase, currentSenti);
+    }
+
+    /*
+     * ==========================
+     * 수익 알림 판단
+     * ==========================
+     */
+    private void checkProfitEvent(
+            PurchaseEntity purchase,
+            double profitRate) {
+        double lastProfit = safe(purchase.getLastProfitEventRate());
+
+        boolean changedEnough = Math.abs(profitRate - lastProfit) >= 3.0;
+
+        boolean cooldownPassed = purchase.getLastProfitEventAt() == null ||
+                Duration.between(
+                        purchase.getLastProfitEventAt(),
+                        LocalDateTime.now()).toMinutes() >= 3;
+
+        if (!changedEnough || !cooldownPassed)
             return;
-        }
 
-        // Kafka 이벤트 생성
         StockEvent event = StockEvent.builder()
+                .type(StockEventType.PROFIT)
                 .userId(purchase.getUser().getId())
                 .companyId(purchase.getCompany().getId())
                 .profitRate(profitRate)
-                .sentimentChange(sentimentChange)
                 .occurredAt(LocalDateTime.now())
                 .build();
 
-        // Kafka 발행
         kafkaTemplate.send(TOPIC, event);
 
         log.info(
-                "StockEvent published | userId={} companyId={} profitRate={} sentiChange={}",
+                "[PROFIT] event published | userId={} companyId={} profitRate={}",
                 event.getUserId(),
                 event.getCompanyId(),
-                profitRate,
-                sentimentChange
-        );
+                profitRate);
 
-        // 기준 상태 업데이트 (중복 방지 핵심)
-        purchase.setLastEventProfitRate(profitRate);
-        purchase.setLastEventSenti(latestScore.getScore());
-        purchase.setLastEventAt(LocalDateTime.now());
+        // 수익 기준만 업데이트
+        purchase.setLastProfitEventRate(profitRate);
+        purchase.setLastProfitEventAt(LocalDateTime.now());
+
+        purchaseRepository.save(purchase);
+    }
+    
+    /*
+     * ==========================
+     * 감정 점수 알림 판단
+     * ==========================
+     */
+    private void checkSentimentEvent(
+            PurchaseEntity purchase,
+            double currentSenti) {
+        // 기준점 선택
+        double baseSenti = purchase.getLastSentiEventScore() != null
+                ? purchase.getLastSentiEventScore()
+                : purchase.getPurSenti();
+
+        double sentiChange = currentSenti - baseSenti;
+
+        boolean changedEnough = Math.abs(sentiChange) >= 10.0;
+
+        boolean cooldownPassed = purchase.getLastSentiEventAt() == null ||
+                Duration.between(
+                        purchase.getLastSentiEventAt(),
+                        LocalDateTime.now()).toMinutes() >= 3;
+
+        if (!changedEnough || !cooldownPassed)
+            return;
+
+        StockEvent event = StockEvent.builder()
+                .type(StockEventType.SENTIMENT)
+                .userId(purchase.getUser().getId())
+                .companyId(purchase.getCompany().getId())
+                .sentimentChange(sentiChange)
+                .currentSentiment(currentSenti)
+                .occurredAt(LocalDateTime.now())
+                .build();
+
+        kafkaTemplate.send(TOPIC, event);
+
+        // 기준점 이동
+        purchase.setLastSentiEventScore(currentSenti);
+        purchase.setLastSentiEventAt(LocalDateTime.now());
 
         purchaseRepository.save(purchase);
     }
 
-    // ==========================
-    // 계산 & 조건 메서드
-    // ==========================
-
+    /*
+     * ==========================
+     * 공통 유틸
+     * ==========================
+     */
     private double calculateProfitRate(Float avgPrice, double currentPrice) {
-        if (avgPrice == null || avgPrice <= 0) return 0.0;
+        if (avgPrice == null || avgPrice <= 0)
+            return 0.0;
         return ((currentPrice - avgPrice) / avgPrice) * 100;
-    }
-
-    private boolean shouldPublishEvent(
-            PurchaseEntity purchase,
-            double profitRate,
-            double currentSenti
-    ) {
-
-        // 기준값
-        double lastProfit = safe(purchase.getLastEventProfitRate());
-        double lastSenti = safe(purchase.getLastEventSenti());
-
-        boolean profitChangedEnough =
-                Math.abs(profitRate - lastProfit) >= 3.0;
-
-        boolean sentiChangedEnough =
-                Math.abs(currentSenti - lastSenti) >= 10.0;
-
-        // 쿨타임 (10분)
-        boolean cooldownPassed =
-                purchase.getLastEventAt() == null ||
-                Duration.between(
-                        purchase.getLastEventAt(),
-                        LocalDateTime.now()
-                ).toMinutes() >= 10;
-
-        return cooldownPassed && (profitChangedEnough || sentiChangedEnough);
     }
 
     private double safe(Double value) {
