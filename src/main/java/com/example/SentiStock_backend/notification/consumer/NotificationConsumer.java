@@ -6,6 +6,7 @@ import com.example.SentiStock_backend.event.StockEvent;
 import com.example.SentiStock_backend.notification.decision.NotificationDecisionService;
 import com.example.SentiStock_backend.notification.domain.type.NotificationType;
 import com.example.SentiStock_backend.notification.service.NotificationService;
+import com.example.SentiStock_backend.notification.service.NotificationSettingService;
 import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.service.UserInvestorService;
 
@@ -23,9 +24,11 @@ public class NotificationConsumer {
         private final UserInvestorService userInvestorService;
         private final NotificationService notificationService;
         private final CompanyRepository companyRepository;
+        private final NotificationSettingService notificationSettingService;
 
         @KafkaListener(topics = "stock-events", groupId = "notification-group")
         public void consume(StockEvent event) {
+
                 if (event == null || event.getUserId() == null || event.getCompanyId() == null) {
                         log.warn("Invalid event payload: {}", event);
                         return;
@@ -35,6 +38,7 @@ public class NotificationConsumer {
 
                 try {
                         UserEntity user = userInvestorService.findById(event.getUserId());
+
                         CompanyEntity company = companyRepository
                                         .findById(event.getCompanyId())
                                         .orElse(null);
@@ -44,7 +48,14 @@ public class NotificationConsumer {
                                 return;
                         }
 
-                        NotificationType type = decisionService.decide(event, user.getInvestorType());
+                        // ⭐ 사용자 설정값 조회 (DB)
+                        double profitChange = notificationSettingService.getProfitChange(user.getId());
+
+                        // ⭐ 변경된 decide 호출
+                        NotificationType type = decisionService.decide(
+                                        event,
+                                        user.getInvestorType(),
+                                        profitChange);
 
                         if (type == NotificationType.NONE) {
                                 return;
@@ -58,7 +69,6 @@ public class NotificationConsumer {
                 } catch (Exception e) {
                         log.error("Kafka consume failed. event={}", event, e);
                 }
-
-                log.info("event class = {}", event.getClass());
         }
+
 }

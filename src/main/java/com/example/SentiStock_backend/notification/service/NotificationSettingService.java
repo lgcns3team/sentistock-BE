@@ -52,6 +52,9 @@ public class NotificationSettingService {
                 if (request.getProfitChange() != null) {
                         setting.setProfitChange(request.getProfitChange());
                 }
+
+                settingRepository.save(setting);
+
         }
 
         /**
