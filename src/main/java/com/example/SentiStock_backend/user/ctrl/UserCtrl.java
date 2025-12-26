@@ -5,10 +5,13 @@ import com.example.SentiStock_backend.favorite.domain.dto.FavoriteCompanyRespons
 import com.example.SentiStock_backend.favorite.domain.dto.FavoriteSectorResponseDto;
 import com.example.SentiStock_backend.favorite.service.FavoriteCompanyService;
 import com.example.SentiStock_backend.purchase.service.PurchaseService;
+import com.example.SentiStock_backend.user.domain.dto.FcmTokenRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.OnboardingRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.PasswordChangeRequestDto;
 import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
 import com.example.SentiStock_backend.user.domain.dto.UserPurchaseResponseDto;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
+import com.example.SentiStock_backend.user.repository.UserRepository;
 import com.example.SentiStock_backend.user.domain.dto.UserProfileUpdateRequestDto;
 import com.example.SentiStock_backend.user.service.UserService;
 import com.example.SentiStock_backend.favorite.service.FavoriteSectorService;
@@ -25,6 +28,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,9 +43,9 @@ public class UserCtrl {
     private final FavoriteCompanyService favoriteCompanyService;
     private final FavoriteSectorService favoriteSectorService;
     private final PurchaseService purchaseService;
+    private final UserRepository userRepository;
 
-
-    //  내 정보 조회
+    // 내 정보 조회
     @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 아이디, 닉네임, 이메일, provider 등을 조회.")
     @GetMapping("/me")
     public UserMeResponseDto getMyInfo(
@@ -50,12 +54,8 @@ public class UserCtrl {
         return userService.getMyInfo(userId);
     }
 
-
-    //  내 기본 정보 수정 (닉네임만) - 회원정보 수정 탭
-    @Operation(
-        summary = "내 기본 정보 수정(닉네임)",
-        description = "마이페이지 > 회원정보 수정 탭에서 사용하는 API. 닉네임만 수정."
-    )
+    // 내 기본 정보 수정 (닉네임만) - 회원정보 수정 탭
+    @Operation(summary = "내 기본 정보 수정(닉네임)", description = "마이페이지 > 회원정보 수정 탭에서 사용하는 API. 닉네임만 수정.")
     @PatchMapping("/me/profile")
     public UserMeResponseDto updateMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -64,12 +64,8 @@ public class UserCtrl {
         return userService.updateMyNickname(userId, request.getNickname());
     }
 
-
-    //  비밀번호 변경 - 계정 보안 탭 (로컬 회원만)
-    @Operation(
-        summary = "비밀번호 변경",
-        description = "마이페이지 > 계정 보안 탭에서 사용하는 API. 로컬 회원만 비밀번호 변경 가능하며, 카카오 회원은 서버에서 차단."
-    )
+    // 비밀번호 변경 - 계정 보안 탭 (로컬 회원만)
+    @Operation(summary = "비밀번호 변경", description = "마이페이지 > 계정 보안 탭에서 사용하는 API. 로컬 회원만 비밀번호 변경 가능하며, 카카오 회원은 서버에서 차단.")
     @PatchMapping("/me/password")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -80,12 +76,8 @@ public class UserCtrl {
         return ResponseEntity.ok().build();
     }
 
-  
-    //  내 즐겨찾기 종목 목록 조회
-    @Operation(
-        summary = "내 즐겨찾기 종목 목록 조회",
-        description = "로그인한 사용자가 즐겨찾기한 종목의 코드(id)와 이름(name)을 반환합니다."
-    )
+    // 내 즐겨찾기 종목 목록 조회
+    @Operation(summary = "내 즐겨찾기 종목 목록 조회", description = "로그인한 사용자가 즐겨찾기한 종목의 코드(id)와 이름(name)을 반환합니다.")
     @GetMapping("/me/favorites/companies")
     public List<FavoriteCompanyResponseDto> getMyFavoriteCompanies(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -93,13 +85,9 @@ public class UserCtrl {
         return favoriteCompanyService.getMyFavoriteCompanies(userId);
     }
 
-
-    //  온보딩 완료 처리
-    @Operation(
-        summary = "온보딩 완료 (설문 + 관심 섹터 등록)",
-        description = "카카오/로컬 사용자 모두 설문 점수와 관심섹터 5개를 저장하여 투자성향과 관심 섹터를 확정합니다."
-                + " 카카오톡 회원가입 직후 Response Body에 onboardingRequired: true 일때 이 api를 호출."
-    )
+    // 온보딩 완료 처리
+    @Operation(summary = "온보딩 완료 (설문 + 관심 섹터 등록)", description = "카카오/로컬 사용자 모두 설문 점수와 관심섹터 5개를 저장하여 투자성향과 관심 섹터를 확정합니다."
+            + " 카카오톡 회원가입 직후 Response Body에 onboardingRequired: true 일때 이 api를 호출.")
     @PatchMapping("/me/onboarding")
     public ResponseEntity<Void> completeOnboarding(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -108,20 +96,16 @@ public class UserCtrl {
         return ResponseEntity.ok().build();
     }
 
-
-    //  내 구매 종목 목록 조회
-    @Operation(
-        summary = "내 구매 종목 목록 조회",
-        description = "로그인한 사용자가 구매한 종목(코드, 회사명)과 평단가(avgPrice)를 반환합니다."
-    )
+    // 내 구매 종목 목록 조회
+    @Operation(summary = "내 구매 종목 목록 조회", description = "로그인한 사용자가 구매한 종목(코드, 회사명)과 평단가(avgPrice)를 반환합니다.")
     @GetMapping("/me/purchases")
     public List<UserPurchaseResponseDto> getMyPurchaseCompanies(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = userDetails.getId(); 
+        Long userId = userDetails.getId();
         return purchaseService.getMyPurchases(userId);
     }
 
-    //  내 관심 섹터 목록 조회
+    // 내 관심 섹터 목록 조회
     @Operation(summary = "내 관심 섹터 목록 조회", description = "로그인한 사용자가 관심있어하는 섹터 목록(섹터명)을 반환합니다.")
     @GetMapping("/me/favorites/sectors")
     public List<FavoriteSectorResponseDto> getMyFavoriteSectors(
@@ -130,20 +114,30 @@ public class UserCtrl {
         return favoriteSectorService.getMyFavoriteSectors(userId);
     }
 
-    //  회원 탈퇴
-    @Operation(
-    summary = "회원 탈퇴",
-    description = "로그인한 사용자의 계정을 삭제 "
-                + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제 "
-                + "카카오 회원은 서비스 연동 해제"
-    )
-    @DeleteMapping("/me/delete")   
+    // 회원 탈퇴
+    @Operation(summary = "회원 탈퇴", description = "로그인한 사용자의 계정을 삭제 "
+            + "즐겨찾기, 구매내역, 리프레시 토큰, 선택한 섹터 등 연관 데이터도 함께 삭제 "
+            + "카카오 회원은 서비스 연동 해제")
+    @DeleteMapping("/me/delete")
     public ResponseEntity<Void> deleteMyAccount(
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        String userId = userDetails.getUserId();  
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String userId = userDetails.getUserId();
         userService.deleteMyAccount(userId);
-        return ResponseEntity.noContent().build(); 
+        return ResponseEntity.noContent().build();
+    }
+
+    // FCM 토큰 업데이트
+    @Operation(summary = "FCM 토큰 업데이트", description = "사용자의 FCM 토큰을 업데이트합니다.")
+    @PostMapping("/me/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody FcmTokenRequestDto request) {
+        UserEntity user = userRepository
+                .findById(userDetails.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        userService.updateFcmToken(user, request.getFcmToken());
+        return ResponseEntity.ok().build();
     }
 
 }
