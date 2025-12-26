@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;   
-import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;        
-import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;  
+import com.example.SentiStock_backend.favorite.repository.FavoriteCompanyRepository;
+import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
+import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
 import com.example.SentiStock_backend.notification.repository.NotificationRepository;
 import com.example.SentiStock_backend.notification.repository.NotificationSettingRepository;
 
@@ -31,8 +31,7 @@ public class UserService {
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository notificationSettingRepository;
 
-
-    //  내 정보 조회
+    // 내 정보 조회
     @Transactional(readOnly = true)
     public UserMeResponseDto getMyInfo(String userId) {
 
@@ -45,14 +44,13 @@ public class UserService {
                 .nickname(user.getNickname())
                 .userEmail(user.getUserEmail())
                 .passwordMasked("********")
-                .provider(user.getProvider())  // 로컬/카카오 구분용
+                .provider(user.getProvider()) // 로컬/카카오 구분용
                 .subscribe(user.isSubscribe())
                 .investorType(user.getInvestorType())
                 .build();
     }
 
- 
-    //  닉네임 변경 (회원정보 수정 탭)
+    // 닉네임 변경 (회원정보 수정 탭)
     @Transactional
     public UserMeResponseDto updateMyNickname(String userId, String nickname) {
 
@@ -75,8 +73,7 @@ public class UserService {
                 .build();
     }
 
-
-    //  비밀번호 변경 (계정 보안 탭, 로컬 유저만)
+    // 비밀번호 변경 (계정 보안 탭, 로컬 유저만)
     @Transactional
     public void changePassword(String userId, PasswordChangeRequestDto dto) {
 
@@ -90,11 +87,11 @@ public class UserService {
 
         // 현재 비밀번호 검증
         if (user.getUserPw() == null ||
-            !passwordEncoder.matches(dto.getCurrentPassword(), user.getUserPw())) {
+                !passwordEncoder.matches(dto.getCurrentPassword(), user.getUserPw())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        // 새 비밀번호 & 확인 일치 
+        // 새 비밀번호 & 확인 일치
         if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
             throw new IllegalArgumentException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
@@ -109,7 +106,7 @@ public class UserService {
         user.changePassword(encoded);
     }
 
-    //  설문, 섹터선택 미실시자 다시 완료 처리
+    // 설문, 섹터선택 미실시자 다시 완료 처리
     @Transactional
     public void completeOnboarding(Long userId, OnboardingRequestDto request) {
         // 유저 조회
@@ -133,14 +130,14 @@ public class UserService {
 
         Long userPk = user.getId();
 
-        // 카카오 연동 해제 
+        // 카카오 연동 해제
         if (user.isSocialUser()) {
             authService.unlinkSocialAccount(user);
-        } 
+        }
 
-        // 알림 관련 삭제 
-        notificationRepository.deleteAllByUser_Id(userPk);      
-        notificationSettingRepository.deleteByUser_Id(userPk); 
+        // 알림 관련 삭제
+        notificationRepository.deleteAllByUser_Id(userPk);
+        notificationSettingRepository.deleteByUser_Id(userPk);
 
         // 즐겨찾기 섹터 삭제
         favoriteSectorRepository.deleteAllByUserId(userPk);
@@ -154,10 +151,17 @@ public class UserService {
         // 리프레시 토큰 삭제
         refreshTokenRepository.deleteByUser(user);
 
+        // FCM 토큰 제거
+        user.changeFcmToken(null);
+
         // 유저 삭제
         userRepository.delete(user);
     }
 
-
+    // FCM 토큰 업데이트
+    @Transactional
+    public void updateFcmToken(UserEntity user, String fcmToken) {
+        user.changeFcmToken(fcmToken);
+    }
 
 }

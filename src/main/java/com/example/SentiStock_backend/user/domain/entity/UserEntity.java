@@ -57,7 +57,7 @@ public class UserEntity {
     @Column(name = "provider_id", length = 100)
     private String providerId;
 
-    // FCM 토큰 
+    // FCM 토큰
     @Column(name = "fcm_token", length = 255, nullable = true)
     private String fcmToken;
 
@@ -106,6 +106,10 @@ public class UserEntity {
 
     public void setInvestorType(String investorType) {
         this.investorType = investorType;
+    }
+
+    public void changeFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 
 }

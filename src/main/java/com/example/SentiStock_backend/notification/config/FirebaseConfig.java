@@ -23,7 +23,7 @@ public class FirebaseConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                System.out.println("🔥 FirebaseApp initialized");
+                System.out.println(" FirebaseApp initialized");
             }
 
         } catch (Exception e) {
