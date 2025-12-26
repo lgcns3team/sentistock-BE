@@ -48,10 +48,10 @@ public class NotificationConsumer {
                                 return;
                         }
 
-                        // ⭐ 사용자 설정값 조회 (DB)
+                        // 사용자 설정값 조회 (DB)
                         double profitChange = notificationSettingService.getProfitChange(user.getId());
 
-                        // ⭐ 변경된 decide 호출
+                        // 변경된 decide 호출
                         NotificationType type = decisionService.decide(
                                         event,
                                         user.getInvestorType(),
