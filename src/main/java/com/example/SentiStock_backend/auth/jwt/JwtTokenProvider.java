@@ -40,26 +40,40 @@ public class JwtTokenProvider {
     }
 
 
-    public String createAccessToken(String userId) {
-        return createToken(userId, accessTokenValidityInMs, "ACCESS");
+    public String createAccessToken(String userId, String nickname) {
+        return createToken(userId, nickname, accessTokenValidityInMs, "ACCESS");
     }
+
 
     public String createRefreshToken(String userId) {
-        return createToken(userId, refreshTokenValidityInMs, "REFRESH");
+        return createToken(userId, null, refreshTokenValidityInMs, "REFRESH");
     }
 
-    private String createToken(String userId, long validityInMs, String type) {
+
+    private String createToken(
+            String userId,
+            String nickname,
+            long validityInMs,
+            String type
+    ) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(validityInMs);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
-                .claim("type", type)   
+                .claim("type", type);
+
+        if (nickname != null && !nickname.isBlank()) {
+            builder.claim("nickname", nickname);
+        }
+
+        return builder
                 .signWith(secretKey)
                 .compact();
     }
+
 
     public String getUserId(String token) {
         return Jwts.parser()
