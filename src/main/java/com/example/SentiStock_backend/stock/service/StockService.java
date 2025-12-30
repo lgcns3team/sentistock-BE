@@ -135,26 +135,41 @@ public class StockService {
                 })
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
-                    List<StockEntity> list = entry.getValue();
-                    long sum = list.stream()
+
+                    List<StockEntity> sorted = entry.getValue().stream()
+                            .sorted(Comparator.comparing(StockEntity::getDate))
+                            .toList();
+
+                    List<StockEntity> valid = sorted.stream()
+                            .filter(e -> e.getStckPrpr() != null && e.getStckPrpr() > 0 &&
+                                    e.getStckOprc() != null && e.getStckOprc() > 0 &&
+                                    e.getStckHgpr() != null && e.getStckHgpr() > 0 &&
+                                    e.getStckLwpr() != null && e.getStckLwpr() > 0)
+                            .toList();
+
+                    if (valid.isEmpty()) {
+                        return null;
+                    }
+                    long sum = valid.stream()
                             .mapToLong(StockEntity::getStckPrpr)
                             .sum();
-                    int avgPrice = (int) (sum / list.size());
-                    long volume = 0L;
-                    long maxVol = list.stream().mapToLong(StockEntity::getAcmlVol).max().orElse(0L);
-                    long minVol = list.stream().mapToLong(StockEntity::getAcmlVol).min().orElse(0L);
-                    volume = Math.max(0L, maxVol - minVol);
+                    int avgPrice = (int) (sum / valid.size());
+
+                    long maxVol = valid.stream().mapToLong(StockEntity::getAcmlVol).max().orElse(0L);
+                    long minVol = valid.stream().mapToLong(StockEntity::getAcmlVol).min().orElse(0L);
+                    long volume = Math.max(0L, maxVol - minVol);
 
                     return StockPriceDto.builder()
                             .date(entry.getKey())
-                            .open(list.get(0).getStckOprc())
-                            .close(list.get(list.size() - 1).getStckPrpr())
-                            .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
-                            .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
+                            .open(valid.get(0).getStckOprc())
+                            .close(valid.get(valid.size() - 1).getStckPrpr())
+                            .high(valid.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
+                            .low(valid.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
                             .volume(volume)
                             .avgPrice(avgPrice)
                             .build();
                 })
+                .filter(dto -> dto != null)
                 .toList();
 
         if (candles.size() > 28) {
