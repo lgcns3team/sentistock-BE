@@ -50,6 +50,8 @@ public class SecurityConfig {
                                 "/api/auth/reissue",
                                 "/swagger-ui/**",
                                 "/api/auth/oauth/**",
+                                "/health",
+                                "/actuator/health",
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
