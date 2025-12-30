@@ -48,21 +48,30 @@ public class StockService {
         LocalDateTime hourStart = now.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime hourEnd = hourStart.plusHours(1);
         List<StockEntity> hourBars = stockRepository
-            .findByCompany_IdAndDateBetweenOrderByDateAsc(
-                    companyId,
-                    hourStart,
-                    hourEnd
-            );
+                .findByCompany_IdAndDateBetweenOrderByDateAsc(
+                        companyId,
+                        hourStart,
+                        hourEnd);
 
-        long hourVolume = hourBars.stream()
-            .mapToLong(StockEntity::getAcmlVol)
-            .sum();
+        long hourVolume = 0L;
+        if (!hourBars.isEmpty()) {
+            long max = hourBars.stream()
+                    .mapToLong(StockEntity::getAcmlVol)
+                    .max()
+                    .orElse(0L);
 
+            long min = hourBars.stream()
+                    .mapToLong(StockEntity::getAcmlVol)
+                    .min()
+                    .orElse(0L);
+
+            hourVolume = Math.max(0L, max - min);
+        }
         return StockChangeInfo.builder()
-            .currentPrice(current)
-            .changeRate(changeRate)
-            .volume(hourVolume)   
-            .build();
+                .currentPrice(current)
+                .changeRate(changeRate)
+                .volume(hourVolume)
+                .build();
     }
 
     private List<StockHeatmapItemDto> loadSectorStocks(Long sectorId) {
@@ -131,6 +140,10 @@ public class StockService {
                             .mapToLong(StockEntity::getStckPrpr)
                             .sum();
                     int avgPrice = (int) (sum / list.size());
+                    long volume = 0L;
+                    long maxVol = list.stream().mapToLong(StockEntity::getAcmlVol).max().orElse(0L);
+                    long minVol = list.stream().mapToLong(StockEntity::getAcmlVol).min().orElse(0L);
+                    volume = Math.max(0L, maxVol - minVol);
 
                     return StockPriceDto.builder()
                             .date(entry.getKey())
@@ -138,7 +151,7 @@ public class StockService {
                             .close(list.get(list.size() - 1).getStckPrpr())
                             .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
                             .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
-                            .volume(list.stream().mapToLong(StockEntity::getAcmlVol).sum())
+                            .volume(volume)
                             .avgPrice(avgPrice)
                             .build();
                 })

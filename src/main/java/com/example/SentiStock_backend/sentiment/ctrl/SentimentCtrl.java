@@ -42,7 +42,7 @@ public class SentimentCtrl {
     }
 
     /** 종목 감정 점수 7개 조회 (히스토리) */
-    @Operation(summary = "종목 감정 점수 히스토리 조회 (최근 7개)", description = "지정된 회사 종목에 대한 최근 7개의 감정 점수 히스토리를 조회합니다.")
+    @Operation(summary = "종목 감정 점수 히스토리 조회 (최근 28개)", description = "지정된 회사 종목에 대한 최근 7개의 감정 점수 히스토리를 조회합니다.")
     @GetMapping("/history/{companyId}")
     public List<StocksScoreResponseDto> getSentimentHistory(
             @Parameter(description = "회사 종목 코드", example = "005930") @PathVariable String companyId) {
