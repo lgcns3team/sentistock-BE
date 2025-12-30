@@ -48,21 +48,30 @@ public class StockService {
         LocalDateTime hourStart = now.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime hourEnd = hourStart.plusHours(1);
         List<StockEntity> hourBars = stockRepository
-            .findByCompany_IdAndDateBetweenOrderByDateAsc(
-                    companyId,
-                    hourStart,
-                    hourEnd
-            );
+                .findByCompany_IdAndDateBetweenOrderByDateAsc(
+                        companyId,
+                        hourStart,
+                        hourEnd);
 
-        long hourVolume = hourBars.stream()
-            .mapToLong(StockEntity::getAcmlVol)
-            .sum();
+        long hourVolume = 0L;
+        if (!hourBars.isEmpty()) {
+            long max = hourBars.stream()
+                    .mapToLong(StockEntity::getAcmlVol)
+                    .max()
+                    .orElse(0L);
 
+            long min = hourBars.stream()
+                    .mapToLong(StockEntity::getAcmlVol)
+                    .min()
+                    .orElse(0L);
+
+            hourVolume = Math.max(0L, max - min);
+        }
         return StockChangeInfo.builder()
-            .currentPrice(current)
-            .changeRate(changeRate)
-            .volume(hourVolume)   
-            .build();
+                .currentPrice(current)
+                .changeRate(changeRate)
+                .volume(hourVolume)
+                .build();
     }
 
     private List<StockHeatmapItemDto> loadSectorStocks(Long sectorId) {
@@ -126,22 +135,41 @@ public class StockService {
                 })
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
-                    List<StockEntity> list = entry.getValue();
-                    long sum = list.stream()
+
+                    List<StockEntity> sorted = entry.getValue().stream()
+                            .sorted(Comparator.comparing(StockEntity::getDate))
+                            .toList();
+
+                    List<StockEntity> valid = sorted.stream()
+                            .filter(e -> e.getStckPrpr() != null && e.getStckPrpr() > 0 &&
+                                    e.getStckOprc() != null && e.getStckOprc() > 0 &&
+                                    e.getStckHgpr() != null && e.getStckHgpr() > 0 &&
+                                    e.getStckLwpr() != null && e.getStckLwpr() > 0)
+                            .toList();
+
+                    if (valid.isEmpty()) {
+                        return null;
+                    }
+                    long sum = valid.stream()
                             .mapToLong(StockEntity::getStckPrpr)
                             .sum();
-                    int avgPrice = (int) (sum / list.size());
+                    int avgPrice = (int) (sum / valid.size());
+
+                    long maxVol = valid.stream().mapToLong(StockEntity::getAcmlVol).max().orElse(0L);
+                    long minVol = valid.stream().mapToLong(StockEntity::getAcmlVol).min().orElse(0L);
+                    long volume = Math.max(0L, maxVol - minVol);
 
                     return StockPriceDto.builder()
                             .date(entry.getKey())
-                            .open(list.get(0).getStckOprc())
-                            .close(list.get(list.size() - 1).getStckPrpr())
-                            .high(list.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
-                            .low(list.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
-                            .volume(list.stream().mapToLong(StockEntity::getAcmlVol).sum())
+                            .open(valid.get(0).getStckOprc())
+                            .close(valid.get(valid.size() - 1).getStckPrpr())
+                            .high(valid.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
+                            .low(valid.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
+                            .volume(volume)
                             .avgPrice(avgPrice)
                             .build();
                 })
+                .filter(dto -> dto != null)
                 .toList();
 
         if (candles.size() > 28) {

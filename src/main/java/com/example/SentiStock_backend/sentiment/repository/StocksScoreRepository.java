@@ -15,7 +15,7 @@ public interface StocksScoreRepository extends JpaRepository<StocksScoreEntity, 
      * 최신 7개 데이터를 날짜 기준 내림차순으로 조회
      * (차트용 감정 점수 히스토리 조회)
      */
-    List<StocksScoreEntity> findTop7ByCompanyIdOrderByDateDesc(String companyId);
+    List<StocksScoreEntity> findTop28ByCompanyIdOrderByDateDesc(String companyId);
 
     Optional<StocksScoreEntity> findTopByCompany_IdOrderByDateDesc(String companyId);
     

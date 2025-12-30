@@ -79,7 +79,7 @@ public class SentimentService {
          */
         public List<StocksScoreResponseDto> getSentimentHistory(String companyId) {
 
-                List<StocksScoreEntity> list = stocksScoreRepository.findTop7ByCompanyIdOrderByDateDesc(companyId);
+                List<StocksScoreEntity> list = stocksScoreRepository.findTop28ByCompanyIdOrderByDateDesc(companyId);
 
                 return list.stream()
                                 .sorted((a, b) -> a.getDate().compareTo(b.getDate())) // ASC 정렬
