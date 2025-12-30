@@ -46,17 +46,21 @@ public class PurchaseService {
                                 .map(StocksScoreEntity::getScore)
                                 .orElse(null);
 
-                PurchaseEntity purchase = PurchaseEntity.builder()
-                                .user(user)
-                                .company(company)
-                                .avgPrice(request.getAvgPrice())
-                                .purSenti(latestSenti)
-                                .build();
+                PurchaseEntity purchase = purchaseRepository
+                                .findByUser_IdAndCompany_Id(userId, company.getId())
+                                .orElseGet(() -> PurchaseEntity.builder()
+                                                .user(user)
+                                                .company(company)
+                                                .build());
+
+                
+                purchase.setAvgPrice(request.getAvgPrice());
+                purchase.setPurSenti(latestSenti);
 
                 purchaseRepository.save(purchase);
 
                 return new PurchaseResponseDto(
-                                request.getCompanyId(),
+                                company.getId(),
                                 request.getAvgPrice());
         }
 
