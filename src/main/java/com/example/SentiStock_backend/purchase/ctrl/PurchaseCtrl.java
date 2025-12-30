@@ -1,6 +1,7 @@
 package com.example.SentiStock_backend.purchase.ctrl;
 
 import com.example.SentiStock_backend.auth.jwt.CustomUserDetails;
+import com.example.SentiStock_backend.purchase.domain.dto.PurchaseDeleteRequestDto;
 import com.example.SentiStock_backend.purchase.domain.dto.PurchaseRequestDto;
 import com.example.SentiStock_backend.purchase.domain.dto.PurchaseResponseDto;
 import com.example.SentiStock_backend.purchase.service.PurchaseService;
@@ -22,9 +23,18 @@ public class PurchaseCtrl {
     @Operation(summary = "사용자 매수 종목 등록", description = "사용자가 매수한 종목 정보를 등록합니다.")
     @PostMapping("/save")
     public ResponseEntity<PurchaseResponseDto> savePurchase(
-            @AuthenticationPrincipal CustomUserDetails userDetails, 
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody PurchaseRequestDto request) {
 
         return ResponseEntity.ok(purchaseService.savePurchase(userDetails.getId(), request));
+    }
+
+    @Operation(summary = "사용자 매수 종목 삭제", description = "사용자가 등록한 매수 종목을 삭제합니다.")
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deletePurchase(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody PurchaseDeleteRequestDto request) {
+        purchaseService.deletePurchase(userDetails.getId(), request.getCompanyId());
+        return ResponseEntity.noContent().build();
     }
 }

@@ -53,7 +53,6 @@ public class PurchaseService {
                                                 .company(company)
                                                 .build());
 
-                
                 purchase.setAvgPrice(request.getAvgPrice());
                 purchase.setPurSenti(latestSenti);
 
@@ -99,5 +98,14 @@ public class PurchaseService {
                                         .build();
 
                 }).toList();
+        }
+
+        @Transactional
+        public void deletePurchase(Long userId, String companyId) {
+                PurchaseEntity purchase = purchaseRepository
+                                .findByUser_IdAndCompany_Id(userId, companyId)
+                                .orElseThrow(() -> new RuntimeException("Purchase Not Found"));
+
+                purchaseRepository.delete(purchase);
         }
 }
