@@ -134,8 +134,9 @@ public class AuthService {
         }
 
         // 토큰 생성
-        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getNickname());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
+
 
         // RefreshToken 원문 대신 SHA-256 해시를 저장
         String refreshTokenHash = TokenHashUtil.sha256Base64(refreshToken);
@@ -200,8 +201,9 @@ public class AuthService {
                 .findByProviderAndProviderId(provider, providerId)
                 .orElseGet(() -> createKakaoUser(provider, providerId, email, nickname));
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getNickname());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
+
 
         // RefreshToken 원문 대신 SHA-256 해시를 저장
         String refreshTokenHash = TokenHashUtil.sha256Base64(refreshToken);
@@ -306,8 +308,9 @@ public class AuthService {
         }
 
         // 새 토큰 발급
-        String newAccessToken = jwtTokenProvider.createAccessToken(userId);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(userId);
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getNickname());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
+
 
         // 새 RefreshToken도 SHA-256 해시로 저장
         String newRefreshTokenHash = TokenHashUtil.sha256Base64(newRefreshToken);
