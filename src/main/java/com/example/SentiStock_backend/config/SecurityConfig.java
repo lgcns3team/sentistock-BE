@@ -2,8 +2,10 @@ package com.example.SentiStock_backend.config;
 
 import com.example.SentiStock_backend.auth.jwt.JwtAuthenticationFilter;
 import com.example.SentiStock_backend.auth.jwt.JwtTokenProvider;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -29,7 +31,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                // Actuator endpoint 전체를 이 체인으로만 처리
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(basic -> basic.disable())
+                .formLogin(form -> form.disable())
+
+                // Actuator는 무조건 인증 없이 허용
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -37,6 +58,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -44,17 +66,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // 인증 없이 허용할 API들
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/api/auth/reissue",
-                                "/swagger-ui/**",
                                 "/api/auth/oauth/**",
-                                "/actuator/**",
-                                "/health",
-                                "/actuator/health",
-                                "/v3/api-docs/**"
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+
+                                // 혹시 /health 같은 커스텀 엔드포인트가 있다면
+                                "/health"
                         ).permitAll()
+
+                        // 그 외는 JWT 필요
                         .anyRequest().authenticated()
                 )
 
@@ -77,17 +102,13 @@ public class SecurityConfig {
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-
-
         config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
-
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(
