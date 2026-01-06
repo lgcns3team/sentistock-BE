@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 "/api/auth/reissue",
                                 "/swagger-ui/**",
                                 "/api/auth/oauth/**",
+                                "/actuator/**",
                                 "/health",
                                 "/actuator/health",
                                 "/v3/api-docs/**"
