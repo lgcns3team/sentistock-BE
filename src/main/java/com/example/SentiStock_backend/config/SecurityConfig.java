@@ -64,6 +64,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/oauth/kakao").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+
 
                         .anyRequest().authenticated()
                 )
