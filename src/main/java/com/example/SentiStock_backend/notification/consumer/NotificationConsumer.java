@@ -1,74 +1,173 @@
 package com.example.SentiStock_backend.notification.consumer;
 
+import java.util.List;
+
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.company.repository.CompanyRepository;
 import com.example.SentiStock_backend.event.StockEvent;
+import com.example.SentiStock_backend.event.StockEventType;
 import com.example.SentiStock_backend.notification.decision.NotificationDecisionService;
 import com.example.SentiStock_backend.notification.domain.type.NotificationType;
 import com.example.SentiStock_backend.notification.service.NotificationService;
-import com.example.SentiStock_backend.notification.service.NotificationSettingService;
-import com.example.SentiStock_backend.user.domain.entity.UserEntity;
-import com.example.SentiStock_backend.user.service.UserInvestorService;
+import com.example.SentiStock_backend.purchase.domain.entity.PurchaseEntity;
+import com.example.SentiStock_backend.purchase.repository.PurchaseRepository;
+import com.example.SentiStock_backend.sentiment.service.SentimentService;
+import com.example.SentiStock_backend.stock.service.VolumeService;
+import com.example.SentiStock_backend.trade.domain.service.TradeDecisionService;
+import com.example.SentiStock_backend.trade.domain.type.TradeDecisionType;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationConsumer {
 
-        private final NotificationDecisionService decisionService;
-        private final UserInvestorService userInvestorService;
-        private final NotificationService notificationService;
-        private final CompanyRepository companyRepository;
-        private final NotificationSettingService notificationSettingService;
+    private final NotificationDecisionService notificationDecisionService;
+    private final TradeDecisionService tradeDecisionService;
+    private final NotificationService notificationService;
 
-        @KafkaListener(topics = "stock-events", groupId = "notification-group")
-        public void consume(StockEvent event) {
+    private final PurchaseRepository purchaseRepository;
+    private final CompanyRepository companyRepository;
 
-                if (event == null || event.getUserId() == null || event.getCompanyId() == null) {
-                        log.warn("Invalid event payload: {}", event);
-                        return;
-                }
+    private final SentimentService sentimentService;
+    private final VolumeService volumeService;
 
-                log.info("Kafka StockEvent received: {}", event);
+    @KafkaListener(topics = "stock-events", groupId = "notification-group")
+    @Transactional
+    public void consume(StockEvent event) {
 
-                try {
-                        UserEntity user = userInvestorService.findById(event.getUserId());
-
-                        CompanyEntity company = companyRepository
-                                        .findById(event.getCompanyId())
-                                        .orElse(null);
-
-                        if (company == null) {
-                                log.warn("Company not found. companyId={}", event.getCompanyId());
-                                return;
-                        }
-
-                        // 사용자 설정값 조회 (DB)
-                        double profitChange = notificationSettingService.getProfitChange(user.getId());
-
-                        // 변경된 decide 호출
-                        NotificationType type = decisionService.decide(
-                                        event,
-                                        user.getInvestorType(),
-                                        profitChange);
-
-                        if (type == NotificationType.NONE) {
-                                return;
-                        }
-
-                        notificationService.sendNotification(user, company, type, event);
-
-                        log.info("Notification processed. userId={}, companyId={}, type={}",
-                                        user.getId(), company.getId(), type);
-
-                } catch (Exception e) {
-                        log.error("Kafka consume failed. event={}", event, e);
-                }
+        if (event == null || event.getUserId() == null || event.getCompanyId() == null) {
+            return;
         }
 
+        PurchaseEntity purchase =
+                purchaseRepository.findByUser_IdAndCompany_Id(
+                        event.getUserId(),
+                        event.getCompanyId()
+                ).orElse(null);
+        if (purchase == null) return;
+
+        CompanyEntity company =
+                companyRepository.findById(event.getCompanyId()).orElse(null);
+        if (company == null) return;
+
+        NotificationType notificationType = NotificationType.NONE;
+        TradeDecisionType decision = null;
+
+        /* =========================
+         *  감정 단독 판단
+         * ========================= */
+        if (event.getType() == StockEventType.SENTIMENT_UP
+                || event.getType() == StockEventType.SENTIMENT_DOWN) {
+
+            notificationType =
+                    notificationDecisionService.decideSentiment(event, purchase);
+        }
+
+        /* =========================
+         *  감정 + 거래량 복합 판단
+         * ========================= */
+        if (event.getType() == StockEventType.SENTIMENT_UP
+                || event.getType() == StockEventType.SENTIMENT_DOWN
+                || event.getType() == StockEventType.VOLUME) {
+
+            List<Double> recentSentiments =
+                    sentimentService.getRecentSentiments(
+                            event.getCompanyId(), 3);
+
+            if (recentSentiments.size() >= 3) {
+
+                double volumeRate =
+                        volumeService.calculateVolumeRate(event.getCompanyId());
+
+                decision = tradeDecisionService.decideSell(
+                        purchase,
+                        recentSentiments,
+                        volumeRate
+                );
+
+                NotificationType complexType = mapToNotificationType(decision);
+
+                if (complexType == NotificationType.SELL
+                        || complexType == NotificationType.WARNING) {
+
+                    notificationType = complexType;
+                }
+            }
+        }
+
+        /* =========================
+         *  수익률 알림 (완전 독립)
+         * ========================= */
+        if (event.getType() == StockEventType.PROFIT_UP) {
+            notificationType = NotificationType.SELL;
+        }
+
+        if (event.getType() == StockEventType.PROFIT_DOWN) {
+            notificationType = NotificationType.WARNING;
+        }
+
+        if (notificationType == NotificationType.NONE) return;
+
+        /* =========================
+         *  충돌 차단
+         * ========================= */
+        boolean blocked = notificationService.isRecentlySent(
+                purchase.getUser().getId(),
+                company.getId(),
+                notificationType,
+                3
+        );
+
+        if (blocked) {
+            log.info(
+                    "[BLOCKED] duplicated notification | userId={}, companyId={}, type={}",
+                    purchase.getUser().getId(),
+                    company.getId(),
+                    notificationType
+            );
+            return;
+        }
+
+        /* =========================
+         *  알림 전송
+         * ========================= */
+        notificationService.sendNotification(
+                purchase.getUser(),
+                company,
+                notificationType,
+                event,
+                decision
+        );
+
+        log.info(
+                "Notification sent | userId={}, companyId={}, type={}, decision={}",
+                purchase.getUser().getId(),
+                company.getId(),
+                notificationType,
+                decision
+        );
+    }
+
+    private NotificationType mapToNotificationType(TradeDecisionType decision) {
+        if (decision == null) return NotificationType.NONE;
+
+        switch (decision) {
+            case SELL_DISTRIBUTION_TOP:
+            case SELL_MOMENTUM_WEAKENING:
+                return NotificationType.SELL;
+            case SELL_INTEREST_FADE:
+                return NotificationType.INTEREST;
+            case HOLD_PANIC:
+                return NotificationType.WARNING;
+            default:
+                return NotificationType.NONE;
+        }
+    }
 }

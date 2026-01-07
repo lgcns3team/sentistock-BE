@@ -130,7 +130,7 @@ public class SentimentService {
                 Long negCount = result[1] == null ? 0L : ((Number) result[1]).longValue();
                 Long neuCount = result[2] == null ? 0L : ((Number) result[2]).longValue();
                 Long totalCount = ((Number) result[3]).longValue();
-                
+
                 if (totalCount == 0) {
                         log.warn("⚠ totalCount is zero for companyId={}", companyId);
                         return new SentimentRatioResponseDto(companyId, 0L, 0, 0, 0);
@@ -144,13 +144,27 @@ public class SentimentService {
                 int negInt = (int) Math.round(negRatio);
                 int neuInt = (int) Math.round(neuRatio);
 
-
                 return new SentimentRatioResponseDto(
                                 companyId,
                                 totalCount,
                                 posInt,
                                 negInt,
                                 neuInt);
+        }
+
+        /**
+         * 종목의 최근 N개 감정 점수 반환 (시간순)
+         * → TradeDecisionService 전용
+         */
+        public List<Double> getRecentSentiments(String companyId, int limit) {
+
+                List<StocksScoreEntity> list = stocksScoreRepository.findTop28ByCompanyIdOrderByDateDesc(companyId);
+
+                return list.stream()
+                                .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
+                                .map(StocksScoreEntity::getScore)
+                                .limit(limit)
+                                .toList();
         }
 
 }

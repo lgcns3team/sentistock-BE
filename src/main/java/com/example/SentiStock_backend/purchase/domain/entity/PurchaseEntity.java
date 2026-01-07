@@ -62,4 +62,16 @@ public class PurchaseEntity {
 
     @Column(name = "last_senti_event_at")
     private LocalDateTime lastSentiEventAt;
+
+    @Column(name = "last_senti_score")
+    private Double lastSentiScore;
+
+    @Column(name = "last_volume_event_rate")
+    private Double lastVolumeEventRate;
+
+    @Column(name = "last_sell_rule_code", length = 30)
+    private String lastSellRuleCode;
+
+    @Column(name = "last_signal_at")
+    private LocalDateTime lastSignalAt;
 }
