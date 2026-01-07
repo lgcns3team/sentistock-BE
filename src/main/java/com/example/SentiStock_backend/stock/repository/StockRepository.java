@@ -23,4 +23,9 @@ public interface StockRepository extends JpaRepository<StockEntity, Long> {
                         LocalDateTime end);
 
         Optional<StockEntity> findTop1ByCompanyIdOrderByDateDesc(String companyId);
+
+        /**
+         * 특정 종목의 최근 N일 주가 데이터 조회 (날짜 DESC)
+         */
+        List<StockEntity> findTop5ByCompanyIdOrderByDateDesc(String companyId);
 }

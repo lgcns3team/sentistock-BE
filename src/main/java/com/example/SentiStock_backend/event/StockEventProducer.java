@@ -10,11 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StockEventProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, StockEvent> kafkaTemplate;
 
     private static final String TOPIC = "stock-events";
 
     public void publish(StockEvent event) {
+        log.info(" PRODUCING EVENT: {}", event);
+
         kafkaTemplate.send(TOPIC, event.getCompanyId(), event);
         log.info("sending event = {}", event);
 

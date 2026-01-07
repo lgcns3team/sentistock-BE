@@ -17,6 +17,7 @@ public class StockEvent {
     private Double sentimentChange;
     private LocalDateTime occurredAt;
     private Double currentSentiment;
+    private Double volumeRate;
 
 
 }

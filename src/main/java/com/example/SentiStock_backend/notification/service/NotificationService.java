@@ -2,6 +2,8 @@ package com.example.SentiStock_backend.notification.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.Duration;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +13,10 @@ import com.example.SentiStock_backend.notification.domain.type.NotificationType;
 import com.example.SentiStock_backend.company.domain.entity.CompanyEntity;
 import com.example.SentiStock_backend.event.StockEvent;
 import com.example.SentiStock_backend.notification.domain.dto.NotificationResponseDto;
-import com.example.SentiStock_backend.notification.repository.NotificationRepository;
-import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
+import com.example.SentiStock_backend.notification.repository.NotificationRepository;
+import com.example.SentiStock_backend.trade.domain.type.TradeDecisionType;
+import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +25,12 @@ public class NotificationService {
         private final NotificationRepository notificationRepository;
         private final FirebaseService firebaseService;
 
-        
-
-        /**
-         * 알림 조회
-         **/
+        /*
+         * =========================
+         * 조회
+         * =========================
+         */
         public List<NotificationResponseDto> getNotifications(Long userId) {
-
                 return notificationRepository.findByUser_IdOrderByDateDesc(userId)
                                 .stream()
                                 .map(n -> NotificationResponseDto.builder()
@@ -42,11 +44,7 @@ public class NotificationService {
                                 .toList();
         }
 
-        /**
-         * 알림 확인 처리
-         **/
         public void checkNotification(Long notificationId, Long userId) {
-
                 NotificationEntity notification = notificationRepository.findById(notificationId)
                                 .orElseThrow(() -> new RuntimeException("Notification Not Found"));
 
@@ -58,28 +56,49 @@ public class NotificationService {
                 notificationRepository.save(notification);
         }
 
+        /*
+         * =========================
+         * 충돌 차단 (시간 기준)
+         * =========================
+         */
+        public boolean isRecentlySent(
+                        Long userId,
+                        String companyId,
+                        NotificationType type,
+                        int minutes) {
 
+                Optional<NotificationEntity> last = notificationRepository
+                                .findTopByUser_IdAndCompany_IdAndTypeOrderByDateDesc(
+                                                userId,
+                                                companyId,
+                                                type.name());
+
+                if (last.isEmpty())
+                        return false;
+
+                long diffMinutes = Duration.between(
+                                last.get().getDate(),
+                                LocalDateTime.now()).toMinutes();
+
+                return diffMinutes < minutes;
+        }
+
+        /*
+         * =========================
+         * 알림 전송
+         * =========================
+         */
         public void sendNotification(
                         UserEntity user,
                         CompanyEntity company,
                         NotificationType type,
-                        StockEvent event) {
+                        StockEvent event,
+                        TradeDecisionType decision) {
 
-                // 알림 타입별 메시지 생성
-                String content = buildContent(company, type, event);
-
-                // 중복 알림 방지
-                boolean exists = notificationRepository
-                                .existsByUser_IdAndCompany_IdAndTypeAndIsCheckFalse(
-                                                user.getId(),
-                                                company.getId(),
-                                                type.name());
-
-                if (exists) {
+                String content = buildContent(company, type, event, decision);
+                if (content.isBlank())
                         return;
-                }
 
-                // 알림 저장
                 NotificationEntity notification = NotificationEntity.builder()
                                 .user(user)
                                 .company(company)
@@ -91,7 +110,6 @@ public class NotificationService {
 
                 notificationRepository.save(notification);
 
-                // FCM 전송
                 if (user.getFcmToken() != null) {
                         firebaseService.sendPush(
                                         user.getFcmToken(),
@@ -100,28 +118,69 @@ public class NotificationService {
                 }
         }
 
+        /*
+         * =========================
+         * 알림 문구 생성
+         * =========================
+         */
         private String buildContent(
                         CompanyEntity company,
                         NotificationType type,
-                        StockEvent event) {
+                        StockEvent event,
+                        TradeDecisionType decision) {
+
+                String name = company.getName();
+                Double sentiment = event.getSentimentChange();
+                Double profit = event.getProfitRate();
+
                 return switch (type) {
-                        case SELL -> company.getName()
-                                        + " 수익률이 "
-                                        + String.format("%.2f", event.getProfitRate())
-                                        + "%로 매도 기준에 도달했습니다.";
 
-                        case WARNING -> company.getName()
-                                        + " 수익률이 "
-                                        + String.format("%.2f", event.getProfitRate())
-                                        + "%로 하락해 주의가 필요합니다.";
+                        case BUY -> {
+                                if (sentiment == null)
+                                        yield "";
+                                yield name + " 투자 심리가 개선되고 있습니다. "
+                                                + String.format("(감정 점수 +%.0f) ", sentiment)
+                                                + "매수를 고려해보세요.";
+                        }
 
-                        case INTEREST -> company.getName()
-                                        + " 감정 점수가 "
-                                        + String.format("%.2f", event.getSentimentChange())
-                                        + " 만큼 변동했습니다.";
+                        case SELL -> {
+
+                                if (profit != null) {
+                                        yield name + " 수익률이 "
+                                                        + String.format("%.1f%%", profit)
+                                                        + "에 도달했습니다. 차익 실현을 고려해보세요.";
+                                }
+
+                                if (decision == TradeDecisionType.SELL_DISTRIBUTION_TOP) {
+                                        yield name + " 거래량이 급증하며 과열 신호가 감지되었습니다. "
+                                                        + "차익 실현을 고려해보세요.";
+                                }
+
+                                if (decision == TradeDecisionType.SELL_MOMENTUM_WEAKENING) {
+                                        yield name + " 거래량 감소와 함께 상승 동력이 약화되고 있습니다. "
+                                                        + "매도를 고려해보세요.";
+                                }
+
+                                yield "";
+                        }
+
+                        case WARNING -> {
+                                if (profit == null)
+                                        yield "";
+                                yield name + " 수익률이 "
+                                                + String.format("%.1f%%", profit)
+                                                + "로 하락했습니다. 주의가 필요합니다.";
+                        }
+
+                        case INTEREST -> {
+                                if (sentiment == null)
+                                        yield "";
+                                yield name + " 시장 관심이 줄어들고 있습니다. "
+                                                + String.format("(감정 점수 %.0f) ", sentiment)
+                                                + "관망을 고려해보세요.";
+                        }
 
                         default -> "";
                 };
         }
-
 }

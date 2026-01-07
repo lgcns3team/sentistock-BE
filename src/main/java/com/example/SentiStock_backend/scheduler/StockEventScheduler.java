@@ -32,7 +32,9 @@ public class StockEventScheduler {
 
     private static final String TOPIC = "stock-events";
 
-    // 1분 주기 (테스트용)
+    /**
+     * 테스트용: 1분 주기
+     */
     @Scheduled(fixedDelay = 60_000)
     public void publishStockEvents() {
 
@@ -49,129 +51,164 @@ public class StockEventScheduler {
 
     private void processPurchase(PurchaseEntity purchase) {
 
-        StockEntity latestStock = stockRepository
-                .findTopByCompanyIdOrderByDateDesc(
-                        purchase.getCompany().getId())
-                .orElse(null);
+        String companyId = purchase.getCompany().getId();
 
-        StocksScoreEntity latestScore = stocksScoreRepository
-                .findTopByCompany_IdOrderByDateDesc(
-                        purchase.getCompany().getId())
-                .orElse(null);
+        StockEntity latestStock =
+                stockRepository.findTopByCompanyIdOrderByDateDesc(companyId)
+                        .orElse(null);
 
-        if (latestStock == null || latestScore == null) {
-            return;
-        }
+        StocksScoreEntity latestScore =
+                stocksScoreRepository.findTopByCompany_IdOrderByDateDesc(companyId)
+                        .orElse(null);
 
-        double profitRate = calculateProfitRate(
-                purchase.getAvgPrice(),
-                latestStock.getStckPrpr());
+        if (latestStock == null || latestScore == null) return;
 
-        double currentSenti = latestScore.getScore();
+        double profitRate =
+                calculateProfitRate(
+                        purchase.getAvgPrice(),
+                        latestStock.getStckPrpr()
+                );
 
-        // 완전히 분리
+        double currentSentiment = latestScore.getScore();
+
         checkProfitEvent(purchase, profitRate);
-        checkSentimentEvent(purchase, currentSenti);
+        checkSentimentEvent(purchase, currentSentiment);
+        checkVolumeEvent(purchase);
     }
 
     /*
      * ==========================
-     * 수익 알림 판단
+     * PROFIT 이벤트 (독립)
      * ==========================
      */
-    private void checkProfitEvent(
-            PurchaseEntity purchase,
-            double profitRate) {
-        double lastProfit = safe(purchase.getLastProfitEventRate());
+    private void checkProfitEvent(PurchaseEntity purchase, double profitRate) {
 
-        boolean changedEnough = Math.abs(profitRate - lastProfit) >= 3.0;
+        double last = safe(purchase.getLastProfitEventRate());
 
-        boolean cooldownPassed = purchase.getLastProfitEventAt() == null ||
+        if (Math.abs(profitRate - last) < 3.0) return;
+
+        if (purchase.getLastProfitEventAt() != null &&
                 Duration.between(
                         purchase.getLastProfitEventAt(),
-                        LocalDateTime.now()).toMinutes() >= 3;
+                        LocalDateTime.now()
+                ).toMinutes() < 3) return;
 
-        if (!changedEnough || !cooldownPassed)
-            return;
+        StockEventType type =
+                profitRate > last
+                        ? StockEventType.PROFIT_UP
+                        : StockEventType.PROFIT_DOWN;
 
         StockEvent event = StockEvent.builder()
-                .type(StockEventType.PROFIT)
+                .type(type)
                 .userId(purchase.getUser().getId())
                 .companyId(purchase.getCompany().getId())
                 .profitRate(profitRate)
                 .occurredAt(LocalDateTime.now())
                 .build();
 
-        kafkaTemplate.send(TOPIC, event);
+        kafkaTemplate.send(TOPIC, event.getCompanyId(), event);
 
-        log.info(
-                "[PROFIT] event published | userId={} companyId={} profitRate={}",
-                event.getUserId(),
-                event.getCompanyId(),
-                profitRate);
-
-        // 수익 기준만 업데이트
         purchase.setLastProfitEventRate(profitRate);
         purchase.setLastProfitEventAt(LocalDateTime.now());
-
         purchaseRepository.save(purchase);
     }
-    
+
     /*
      * ==========================
-     * 감정 점수 알림 판단
+     * SENTIMENT 이벤트 (단독)
      * ==========================
      */
     private void checkSentimentEvent(
             PurchaseEntity purchase,
-            double currentSenti) {
-        // 기준점 선택
-        double baseSenti = purchase.getLastSentiEventScore() != null
-                ? purchase.getLastSentiEventScore()
-                : purchase.getPurSenti();
+            double currentSentiment
+    ) {
 
-        double sentiChange = currentSenti - baseSenti;
+        double base =
+                purchase.getLastSentiEventScore() != null
+                        ? purchase.getLastSentiEventScore()
+                        : purchase.getPurSenti();
 
-        boolean changedEnough = Math.abs(sentiChange) >= 10.0;
+        double change = currentSentiment - base;
 
-        boolean cooldownPassed = purchase.getLastSentiEventAt() == null ||
+        if (Math.abs(change) < 10.0) return;
+
+        if (purchase.getLastSentiEventAt() != null &&
                 Duration.between(
                         purchase.getLastSentiEventAt(),
-                        LocalDateTime.now()).toMinutes() >= 3;
+                        LocalDateTime.now()
+                ).toMinutes() < 3) return;
 
-        if (!changedEnough || !cooldownPassed)
-            return;
+        StockEventType type =
+                change > 0
+                        ? StockEventType.SENTIMENT_UP
+                        : StockEventType.SENTIMENT_DOWN;
 
         StockEvent event = StockEvent.builder()
-                .type(StockEventType.SENTIMENT)
+                .type(type)
                 .userId(purchase.getUser().getId())
                 .companyId(purchase.getCompany().getId())
-                .sentimentChange(sentiChange)
-                .currentSentiment(currentSenti)
+                .sentimentChange(change)
+                .currentSentiment(currentSentiment)
                 .occurredAt(LocalDateTime.now())
                 .build();
 
-        kafkaTemplate.send(TOPIC, event);
+        kafkaTemplate.send(TOPIC, event.getCompanyId(), event);
 
-        // 기준점 이동
-        purchase.setLastSentiEventScore(currentSenti);
+        purchase.setLastSentiEventScore(currentSentiment);
         purchase.setLastSentiEventAt(LocalDateTime.now());
-
         purchaseRepository.save(purchase);
     }
 
     /*
      * ==========================
-     * 공통 유틸
+     * VOLUME 이벤트 (복합 판단 트리거)
+     * ==========================
+     */
+    private void checkVolumeEvent(PurchaseEntity purchase) {
+
+        String companyId = purchase.getCompany().getId();
+
+        List<StockEntity> stocks =
+                stockRepository.findTop5ByCompanyIdOrderByDateDesc(companyId);
+
+        if (stocks.size() < 5) return;
+
+        long today = stocks.get(0).getAcmlVol();
+
+        double avg =
+                stocks.subList(1, 5).stream()
+                        .mapToLong(StockEntity::getAcmlVol)
+                        .average()
+                        .orElse(0);
+
+        if (avg <= 0) return;
+
+        double volumeRate = ((today - avg) / avg) * 100;
+
+        if (Math.abs(volumeRate) < 50.0) return;
+
+        StockEvent event = StockEvent.builder()
+                .type(StockEventType.VOLUME)
+                .userId(purchase.getUser().getId())
+                .companyId(companyId)
+                .volumeRate(volumeRate)
+                .occurredAt(LocalDateTime.now())
+                .build();
+
+        kafkaTemplate.send(TOPIC, companyId, event);
+    }
+
+    /*
+     * ==========================
+     * Utils
      * ==========================
      */
     private double calculateProfitRate(Float avgPrice, double currentPrice) {
-        if (avgPrice == null || avgPrice <= 0)
-            return 0.0;
+        if (avgPrice == null || avgPrice <= 0) return 0.0;
         return ((currentPrice - avgPrice) / avgPrice) * 100;
     }
 
-    private double safe(Double value) {
-        return value == null ? 0.0 : value;
+    private double safe(Double v) {
+        return v == null ? 0.0 : v;
     }
 }
