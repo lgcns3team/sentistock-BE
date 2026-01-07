@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "TradeSignal")
+@Table(name = "Trade_signal")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
