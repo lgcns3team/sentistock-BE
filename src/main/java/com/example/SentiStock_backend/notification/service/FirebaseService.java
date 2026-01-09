@@ -4,13 +4,16 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class FirebaseService {
 
     public void sendPush(String token, String title, String body) {
+        log.info("[FCM] sendPush called token={}", token);
 
         Message message = Message.builder()
                 .setToken(token)
@@ -20,10 +23,9 @@ public class FirebaseService {
 
         try {
             String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("[FCM] send success messageId=" + response);
+            log.info("[FCM] send success messageId={}", response);
         } catch (FirebaseMessagingException e) {
-            System.err.println("[FCM] send failed");
-            e.printStackTrace();
+            log.error("[FCM] send failed", e);
         }
     }
 }
