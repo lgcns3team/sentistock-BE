@@ -150,24 +150,27 @@ public class StockService {
                     if (valid.isEmpty()) {
                         return null;
                     }
-                    long sum = valid.stream()
-                            .mapToLong(StockEntity::getStckPrpr)
-                            .sum();
+                    long open = valid.get(0).getStckPrpr();
+                    long close = valid.get(valid.size() - 1).getStckPrpr();
+                    long high = valid.stream().mapToLong(StockEntity::getStckPrpr).max().orElse(0L);
+                    long low = valid.stream().mapToLong(StockEntity::getStckPrpr).min().orElse(0L);
+
+                    long sum = valid.stream().mapToLong(StockEntity::getStckPrpr).sum();
                     int avgPrice = (int) (sum / valid.size());
 
                     long maxVol = valid.stream().mapToLong(StockEntity::getAcmlVol).max().orElse(0L);
                     long minVol = valid.stream().mapToLong(StockEntity::getAcmlVol).min().orElse(0L);
                     long volume = Math.max(0L, maxVol - minVol);
 
-                    return StockPriceDto.builder()
-                            .date(entry.getKey())
-                            .open(valid.get(0).getStckOprc())
-                            .close(valid.get(valid.size() - 1).getStckPrpr())
-                            .high(valid.stream().mapToLong(StockEntity::getStckHgpr).max().orElse(0))
-                            .low(valid.stream().mapToLong(StockEntity::getStckLwpr).min().orElse(0))
-                            .volume(volume)
-                            .avgPrice(avgPrice)
-                            .build();
+                     return StockPriceDto.builder()
+                        .date(entry.getKey())
+                        .open(open)
+                        .close(close)
+                        .high(high)
+                        .low(low)
+                        .volume(volume)
+                        .avgPrice(avgPrice)
+                        .build();
                 })
                 .filter(dto -> dto != null)
                 .toList();
