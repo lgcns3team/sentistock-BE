@@ -95,7 +95,8 @@ public class NotificationConsumer {
                 NotificationType complexType = mapToNotificationType(decision);
 
                 if (complexType == NotificationType.SELL
-                        || complexType == NotificationType.WARNING) {
+                        || complexType == NotificationType.WARNING
+                        || complexType == NotificationType.INTEREST) {
 
                     notificationType = complexType;
                 }
@@ -103,7 +104,7 @@ public class NotificationConsumer {
         }
 
         /* =========================
-         *  수익률 알림 (완전 독립)
+         *  수익률 알림
          * ========================= */
         if (event.getType() == StockEventType.PROFIT_UP) {
             notificationType = NotificationType.SELL;
@@ -116,7 +117,7 @@ public class NotificationConsumer {
         if (notificationType == NotificationType.NONE) return;
 
         /* =========================
-         *  충돌 차단
+         *  중복 차단
          * ========================= */
         boolean blocked = notificationService.isRecentlySent(
                 purchase.getUser().getId(),
@@ -136,8 +137,16 @@ public class NotificationConsumer {
         }
 
         /* =========================
-         *  알림 전송
+         *  알림 + 푸시 전송
          * ========================= */
+        String fcmToken = purchase.getUser().getFcmToken();
+        log.info(
+                "[NOTI] ready to send | userId={}, type={}, fcmToken={}",
+                purchase.getUser().getId(),
+                notificationType,
+                fcmToken != null ? "EXISTS" : "NULL"
+        );
+
         notificationService.sendNotification(
                 purchase.getUser(),
                 company,
