@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
@@ -132,6 +134,9 @@ public class UserCtrl {
     public ResponseEntity<Void> updateFcmToken(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody FcmTokenRequestDto request) {
+
+        log.info("[FCM] request | userId={}, token={}", userDetails.getId(), request.getFcmToken());
+
         UserEntity user = userRepository
                 .findById(userDetails.getId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
