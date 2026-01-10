@@ -161,7 +161,9 @@ public class UserService {
     // FCM 토큰 업데이트
     @Transactional
     public void updateFcmToken(UserEntity user, String fcmToken) {
+        log.info("[FCM] before | userId={}, oldToken={}", user.getId(), user.getFcmToken());
         user.changeFcmToken(fcmToken);
+        
     }
 
 }
