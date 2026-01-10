@@ -8,6 +8,8 @@ import com.example.SentiStock_backend.user.domain.dto.UserMeResponseDto;
 import com.example.SentiStock_backend.user.domain.entity.UserEntity;
 import com.example.SentiStock_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import com.example.SentiStock_backend.auth.repository.RefreshTokenRepository;
 import com.example.SentiStock_backend.notification.repository.NotificationRepository;
 import com.example.SentiStock_backend.notification.repository.NotificationSettingRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -163,7 +166,7 @@ public class UserService {
     public void updateFcmToken(UserEntity user, String fcmToken) {
         log.info("[FCM] before | userId={}, oldToken={}", user.getId(), user.getFcmToken());
         user.changeFcmToken(fcmToken);
-        
+        log.info("[FCM] after  | userId={}, newToken={}", user.getId(), user.getFcmToken());
     }
 
 }
