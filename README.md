@@ -1,7 +1,7 @@
 # sentistock-BE
 Sentistock 백엔드
 
-
+```
 📦src
  ┣ 📂main
  ┃ ┣ 📂java
@@ -220,6 +220,7 @@ Sentistock 백엔드
  ┃ ┃ ┣ 📜application-local.yaml
  ┃ ┃ ┣ 📜application-prod.yml
  ┃ ┃ ┗ 📜application.yaml
+```
  ┗ 📂test
  ┃ ┗ 📂java
  ┃ ┃ ┗ 📂com
