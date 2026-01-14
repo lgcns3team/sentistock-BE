@@ -220,10 +220,10 @@ Sentistock 백엔드
  ┃ ┃ ┣ 📜application-local.yaml
  ┃ ┃ ┣ 📜application-prod.yml
  ┃ ┃ ┗ 📜application.yaml
-```
  ┗ 📂test
  ┃ ┗ 📂java
  ┃ ┃ ┗ 📂com
  ┃ ┃ ┃ ┗ 📂example
  ┃ ┃ ┃ ┃ ┗ 📂SentiStock_backend
  ┃ ┃ ┃ ┃ ┃ ┗ 📜SentiStockBackendApplicationTests.java
+```
