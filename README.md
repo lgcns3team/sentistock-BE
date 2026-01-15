@@ -1,5 +1,76 @@
 # sentistock-BE
-Sentistock 백엔드
+
+> **뉴스 감정 분석 기반 주식 투자 판단 지원 백엔드 서비스**  
+> 뉴스 데이터를 수집·분석하여 감정 지표를 생성하고,  
+> 주가 데이터와 결합해 투자 판단에 참고할 수 있는 정보를 제공합니다.
+
+## 🔗 Tech Stack
+
+### Language & Framework
+- Java 17
+- Spring Boot 3.x
+- Spring Data JPA
+- Spring Security (JWT / OAuth2)
+
+### Database
+- MariaDB (AWS RDS)
+- JPA / Hibernate
+
+### Messaging
+- Apache Kafka
+
+### Infrastructure
+- AWS EKS
+- AWS ALB (Ingress)
+- AWS ECR
+- AWS RDS
+- Terraform
+- Docker
+
+### Monitoring & Docs
+- CloudWatch Logs
+- Swagger (OpenAPI)
+
+---
+
+## 🔐 Authentication & Authorization
+
+## 📊 Core Features
+
+## 🧪 API Documentation
+- Swagger UI 제공
+
+```
+/swagger-ui/index.html
+```
+
+## Deployment
+
+### Build
+```
+./gradlew build
+```
+
+### Docker
+```
+docker build -t sentistock-backend .
+docker push <ECR_REPOSITORY>
+```
+
+### Kubernetes
+- Deployment / Service / Ingress 구성
+- Terraform으로 인프라 관리
+
+---
+
+## 🧠 Key Design Decisions
+
+- Gateway 분리로 인증/라우팅 책임 명확화
+- Kafka 도입으로 서비스 간 결합도 감소
+- EKS + Private Subnet 구성으로 보안 강화
+- Terraform을 통한 인프라 재현성 확보
+
+---
 
 ```
 📦src
