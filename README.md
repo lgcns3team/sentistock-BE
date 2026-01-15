@@ -385,3 +385,13 @@ docker push <ECR_REPOSITORY>
 
 </div>
 </details>
+
+<div align=center>
+	<h1>👑 BE Developers 👑</h1>
+	
+| <img src="https://github.com/rudals2334.png" width="80"> | <img src="https://github.com/M4rs0312.png" width="80"> | <img src="https://github.com/jun9ho.png" width="80"> |
+| :--------------------------------------------------: | :------------------------------------------------------: | :----------------------------------------------------------: | 
+|         [이경민](https://github.com/rudals2334)          |         [정회성](https://github.com/M4rs0312)          |         [황정호](https://github.com/jun9ho)     |                         
+|                       BackEnd                       |                         BackEnd                         |                           BackEnd                           |                                     
+
+</div>
