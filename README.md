@@ -152,6 +152,10 @@ docker push <ECR_REPOSITORY>
 
 ---
 
+<details>
+<summary><h2>📂 폴더구조</h2></summary>
+<div markdown="1">    
+ 
 ```
 📦src
  ┣ 📂main
@@ -378,3 +382,6 @@ docker push <ECR_REPOSITORY>
  ┃ ┃ ┃ ┃ ┗ 📂SentiStock_backend
  ┃ ┃ ┃ ┃ ┃ ┗ 📜SentiStockBackendApplicationTests.java
 ```
+
+</div>
+</details>
