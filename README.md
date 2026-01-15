@@ -7,49 +7,50 @@
 ## 🔗 Tech Stack
 
 ### Language & Framework
+> 최신 LTS기반으로 안정성과 성능을 확보하고 인증,인가 및 도메인 중심 설계를 위해 Spring 적극 활용
 - Java 17
 - Spring Boot 3.x
 - Spring Data JPA
 - Spring Security (JWT / OAuth2)
 - Spring Validation
-> 최신 LTS기반으로 안정성과 성능을 확보하고 인증,인가 및 도메인 중심 설계를 위해 Spring 적극 활용
+
 
 ### Database
+> 사용자, 주식, 뉴스, 감정 데이터 등 관계형 데이터 중심의 도메인 구조 관리
 - MariaDB (AWS RDS)
 - JPA / Hibernate
 - Transaction Management
-> 사용자, 주식, 뉴스, 감정 데이터 등 관계형 데이터 중심의 도메인 구조 관리
 
 ### Messaging & Event Streaming
+> 감정 분석 결과, 주식 이벤트, 알림 트리거를 API 요청 흐름과 분리하여 비동기 처리
 - Apache Kafka (AWS MSK)
 - Kafka Producer/Consumer
-> 감정 분석 결과, 주식 이벤트, 알림 트리거를 API 요청 흐름과 분리하여 비동기 처리
 
 ### Notification
-- Firebase Cloud Messaging(FCM)
 > 매수, 매도 시그널 발생 시 사용자에게 실시간 푸시 알림 전송
+- Firebase Cloud Messaging(FCM)
 
 ### Infrastructure & Cloud
+> 컨테이너 기반 배포 환경 구성, 서비스 확장성과 운영 안정성 확보
 - AWS EKS
 - AWS ALB (Ingress)
 - AWS ECR
 - AWS RDS
 - CloudFront + S3(Frontend 연동)
-> 컨테이너 기반 배포 환경 구성, 서비스 확장성과 운영 안정성 확보
 
 ### Infrastructure as Code (IaC)
-- Terraform
 > VPC, EKS, RDS, MSK 등 AWS 인프라를 코드로 관리하여 재현성과 일관성 유지
+ - Terraform
 
 ### Container & Orchestration
+> 실시간 API 서버와 뉴스 수집, 감정 분석 배치 작업을 분리 운영
 - Docker
 - Kuberbetes Deployment/Service/Ingress
 - Kubernetes Cronjob
-> 실시간 API 서버와 뉴스 수집, 감정 분석 배치 작업을 분리 운영
 
 ### Monitoring & Docs
-- Swagger (OpenAPI)
 > 프론트엔드와의 협업 API 명세 공유를 위해 활용
+- Swagger (OpenAPI)
 
 ### 
 ---
