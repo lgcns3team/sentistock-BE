@@ -291,9 +291,6 @@
 ![JWT](https://img.shields.io/badge/JWT-Authentication-black?style=for-the-badge)
 ![OAuth2](https://img.shields.io/badge/OAuth2-Authorization-blue?style=for-the-badge)
 
-### Notification
-![Firebase Cloud Messaging](https://img.shields.io/badge/Firebase-Cloud%20Messaging-FFCA28?style=for-the-badge)
-
 ---
 ## 📌 Key APIs
 
