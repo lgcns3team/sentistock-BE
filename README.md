@@ -16,7 +16,7 @@
 
 
 <details>
-<summary><h2>📂 프로젝트구조</h2></summary>
+<summary><h2>📂 Data Structure</h2></summary>
 <div markdown="1">    
  
 ```
