@@ -59,6 +59,27 @@
 ![Firebase Cloud Messaging](https://img.shields.io/badge/Firebase-Cloud%20Messaging-FFCA28?style=for-the-badge)
 
 ---
+## 📌 Key APIs
+
+| Feature | Method | Endpoint | Description |
+|---|---|---|---|
+| Health | GET | `/health` | 서버 상태 확인 |
+| Auth | POST | `/api/auth/signup` | 회원가입 |
+| User | GET | `/api/users/me` | 내 정보 조회 |
+| User | POST | `/api/users/me/fcm-token` | FCM 토큰 업데이트 |
+| Company | GET | `/api/companies/{companyId}/snapshot` | 종목 스냅샷(현재가/등락률) |
+| Favorites | POST | `/api/companies/{companyId}/favorite/star` | 종목 즐겨찾기 토글 |
+| Stock | GET | `/api/stock/{sectorId}/heatmap` | 섹터 히트맵 조회 |
+| Stock | GET | `/api/stock/candle/hourly/{companyId}` | 시간봉 캔들 조회 |
+| News | GET | `/api/news/recent-score/{companyId}` | 최신 뉴스 3건 + 감정 점수 |
+| Sentiment | GET | `/api/sentiment/history/{companyId}` | 감정 히스토리 조회 |
+| Purchase | POST | `/api/purchase/save` | 매수 종목 등록 |
+| Subscription | POST | `/api/subscriptions/start` | 구독 시작 |
+| Notification | GET | `/api/notifications` | 내 알림 목록 조회 |
+| Notification | PATCH | `/api/notifications/{notificationId}/check` | 알림 읽음 처리 |
+| Valuechain | GET | `/api/valuechains/{companyId}` | 기업 밸류체인 조회 |
+
+---
 ## Deployment
 
 ### Build
